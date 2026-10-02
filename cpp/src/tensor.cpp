@@ -879,16 +879,48 @@ std::shared_ptr<Tensor> operator+(const std::shared_ptr<Tensor>& a, const std::s
     return a->add(b);
 }
 
+std::shared_ptr<Tensor> operator+(const std::shared_ptr<Tensor>& a, double scalar) {
+    return a->add(Tensor::create({1}, scalar, false));
+}
+
+std::shared_ptr<Tensor> operator+(double scalar, const std::shared_ptr<Tensor>& a) {
+    return Tensor::create({1}, scalar, false)->add(a);
+}
+
 std::shared_ptr<Tensor> operator-(const std::shared_ptr<Tensor>& a, const std::shared_ptr<Tensor>& b) {
     return a->sub(b);
+}
+
+std::shared_ptr<Tensor> operator-(const std::shared_ptr<Tensor>& a, double scalar) {
+    return a->sub(Tensor::create({1}, scalar, false));
+}
+
+std::shared_ptr<Tensor> operator-(double scalar, const std::shared_ptr<Tensor>& a) {
+    return Tensor::create({1}, scalar, false)->sub(a);
 }
 
 std::shared_ptr<Tensor> operator*(const std::shared_ptr<Tensor>& a, const std::shared_ptr<Tensor>& b) {
     return a->mul(b);
 }
 
+std::shared_ptr<Tensor> operator*(const std::shared_ptr<Tensor>& a, double scalar) {
+    return a->mul(Tensor::create({1}, scalar, false));
+}
+
+std::shared_ptr<Tensor> operator*(double scalar, const std::shared_ptr<Tensor>& a) {
+    return Tensor::create({1}, scalar, false)->mul(a);
+}
+
 std::shared_ptr<Tensor> operator/(const std::shared_ptr<Tensor>& a, const std::shared_ptr<Tensor>& b) {
     return a->div(b);
+}
+
+std::shared_ptr<Tensor> operator/(const std::shared_ptr<Tensor>& a, double scalar) {
+    return a->div(Tensor::create({1}, scalar, false));
+}
+
+std::shared_ptr<Tensor> operator/(double scalar, const std::shared_ptr<Tensor>& a) {
+    return Tensor::create({1}, scalar, false)->div(a);
 }
 
 std::shared_ptr<Tensor> operator-(const std::shared_ptr<Tensor>& a) {

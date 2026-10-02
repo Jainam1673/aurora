@@ -61,6 +61,9 @@ add_library(aurora_core
     cpp/src/core.cpp
     cpp/src/tensor.cpp
     cpp/src/autograd.cpp
+    cpp/src/nn.cpp
+    cpp/src/optim.cpp
+    cpp/src/checkpoint.cpp
 )
 add_library(aurora::core ALIAS aurora_core)
 
@@ -135,4 +138,26 @@ if(AURORA_BUILD_TESTS)
             GTest::gtest_main
     )
     gtest_discover_tests(aurora_cpp_gradcheck_test)
+
+    # Neural Network Primitives Test
+    add_executable(aurora_cpp_nn_test
+        tests/cpp/test_nn.cpp
+    )
+    target_link_libraries(aurora_cpp_nn_test
+        PRIVATE
+            aurora::core
+            GTest::gtest_main
+    )
+    gtest_discover_tests(aurora_cpp_nn_test)
+
+    # Optimizers & Checkpoint Test
+    add_executable(aurora_cpp_optim_test
+        tests/cpp/test_optim.cpp
+    )
+    target_link_libraries(aurora_cpp_optim_test
+        PRIVATE
+            aurora::core
+            GTest::gtest_main
+    )
+    gtest_discover_tests(aurora_cpp_optim_test)
 endif()

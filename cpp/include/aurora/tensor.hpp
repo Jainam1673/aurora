@@ -111,9 +111,21 @@ private:
 
 // Operator Overloads
 std::shared_ptr<Tensor> operator+(const std::shared_ptr<Tensor>& a, const std::shared_ptr<Tensor>& b);
+std::shared_ptr<Tensor> operator+(const std::shared_ptr<Tensor>& a, double scalar);
+std::shared_ptr<Tensor> operator+(double scalar, const std::shared_ptr<Tensor>& a);
+
 std::shared_ptr<Tensor> operator-(const std::shared_ptr<Tensor>& a, const std::shared_ptr<Tensor>& b);
+std::shared_ptr<Tensor> operator-(const std::shared_ptr<Tensor>& a, double scalar);
+std::shared_ptr<Tensor> operator-(double scalar, const std::shared_ptr<Tensor>& a);
+
 std::shared_ptr<Tensor> operator*(const std::shared_ptr<Tensor>& a, const std::shared_ptr<Tensor>& b);
+std::shared_ptr<Tensor> operator*(const std::shared_ptr<Tensor>& a, double scalar);
+std::shared_ptr<Tensor> operator*(double scalar, const std::shared_ptr<Tensor>& a);
+
 std::shared_ptr<Tensor> operator/(const std::shared_ptr<Tensor>& a, const std::shared_ptr<Tensor>& b);
+std::shared_ptr<Tensor> operator/(const std::shared_ptr<Tensor>& a, double scalar);
+std::shared_ptr<Tensor> operator/(double scalar, const std::shared_ptr<Tensor>& a);
+
 std::shared_ptr<Tensor> operator-(const std::shared_ptr<Tensor>& a);
 
 } // namespace aurora

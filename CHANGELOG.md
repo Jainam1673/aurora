@@ -23,3 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Finite-difference gradient checkers in Python and C++ (`python/aurora/gradcheck.py`, `cpp/include/aurora/gradcheck.hpp`).
   - Cross-language numerical parity suite (`tests/parity/test_numerical_parity.py`) with C++ parity binary (`aurora_parity_runner`).
   - Mathematical specification in `docs/mathematics/numerical_core.md`.
+- **M2 Neural Network Primitives & Optimizers**:
+  - Python neural network primitives: `Parameter`, `Module`, `Linear`, `Embedding`, `LayerNorm`, `RMSNorm`, `Dropout`, `Sequential`, `MLP`, `ResidualBlock`.
+  - Python optimizers and schedulers: `Optimizer`, `SGD`, `Adam`, `AdamW`, `clip_grad_norm`, `clip_grad_value`, `ConstantLR`, `LinearWarmupDecayLR`, `CosineAnnealingLR`.
+  - C++23 native neural network primitives: `Parameter`, `Module`, `Linear`, `Embedding` (with `EmbeddingNode` autograd backwards), `LayerNorm`, `RMSNorm`, `Dropout`, `Sequential`, `MLP`, `ResidualBlock`.
+  - C++23 native optimizers and schedulers: `Optimizer`, `SGD` (with momentum), `Adam`, `AdamW` (with decoupled weight decay), `clip_grad_norm`, `clip_grad_value`, `ConstantLR`, `LinearWarmupDecayLR`, `CosineAnnealingLR`.
+  - Zero-dependency JSON checkpoint serializer and deserializer with exact IEEE-754 17-digit precision (`save_checkpoint`, `load_checkpoint`).
+  - C++ GoogleTest suites: `tests/cpp/test_nn.cpp`, `tests/cpp/test_optim.cpp`.
+  - Cross-language optimization parity suite: `tests/parity/test_checkpoint_parity.py`, verifying $< 10^{-10}$ error lockstep between Python and C++ across forward, autograd backward, and AdamW updates.
+  - Mathematical specification in `docs/mathematics/nn_and_optimizers.md`.
+  - ADR-006: Language-Agnostic JSON Checkpoint Exchange Format & Parameter Registration Order.

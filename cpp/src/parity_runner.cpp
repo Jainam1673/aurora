@@ -1,4 +1,7 @@
 #include "aurora/tensor.hpp"
+#include "aurora/nn.hpp"
+#include "aurora/optim.hpp"
+#include "aurora/checkpoint.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -105,8 +108,33 @@ void write_response(std::ostream& os, const ParityResponse& resp) {
 
 } // namespace aurora
 
-int main() {
+int main(int argc, char** argv) {
     using namespace aurora;
+
+    if (argc >= 5 && std::string(argv[1]) == "--checkpoint-step") {
+        std::string in_ckpt = argv[2];
+        std::string x_ckpt = argv[3];
+        std::string out_ckpt = argv[4];
+
+        auto mlp = std::make_shared<nn::MLP>(4, std::vector<size_t>{8}, 2, "relu", 0.0);
+        auto opt = std::make_shared<optim::AdamW>(mlp->parameters(), 0.01, 0.9, 0.999, 1e-8, 0.01);
+
+        checkpoint::load_checkpoint(in_ckpt, mlp.get(), opt.get());
+
+        auto x_data = checkpoint::load_checkpoint(x_ckpt);
+        auto x = x_data.model_state_dict.at("x");
+
+        opt->zero_grad();
+        auto pred = mlp->forward(x);
+        auto loss = pred->sum();
+        loss->backward();
+        opt->step();
+
+        checkpoint::save_checkpoint(out_ckpt, *mlp, opt.get(), {{"step", std::to_string(opt->step_count())}});
+        std::cout << "STATUS: OK\n";
+        return 0;
+    }
+
     auto req = parse_request(std::cin);
 
     std::vector<std::shared_ptr<Tensor>> inps;

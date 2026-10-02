@@ -46,3 +46,12 @@ This document records key architectural, scientific, and engineering decisions m
 - **Context:** RL literature frequently suffers from reporting single lucky seeds or non-robust $mean \pm std$ statistics that hide outliers.
 - **Decision:** All experiments must be configured via declarative YAML files and output immutable metadata manifests (commit, seed, compiler, hardware, lockfile). Evaluation must compute Interquartile Mean (IQM), bootstrap confidence intervals, and full distribution plots.
 - **Consequences:** Guarantees publication-ready statistical rigor and auditability of all empirical claims.
+
+---
+
+## ADR-006: Language-Agnostic JSON Checkpoint Exchange Format & Parameter Registration Order
+- **Date:** 2026-10-03
+- **Status:** Accepted
+- **Context:** Cross-language numerical parity between Python 3.14 and C++23 native systems requires exact state serialization and deserialization of neural network parameters, optimizer states (such as AdamW first and second moments), and metadata without binary platform endianness or compiler-specific struct layout discrepancies.
+- **Decision:** Use a human-auditable JSON checkpoint format with IEEE-754 17-digit precision (`std::setprecision(17)`). Maintain strict parameter registration order in C++ via `std::vector<std::pair<std::string, std::shared_ptr<Tensor>>>` matching Python's insertion-ordered dictionary, and adopt standard moment names (`exp_avg`, `exp_avg_sq`).
+- **Consequences:** Completely zero-dependency checkpoint parser in C++, guaranteed $< 10^{-10}$ floating-point parity between Python and C++ model weights and optimizer buffers across multiple consecutive optimization steps.

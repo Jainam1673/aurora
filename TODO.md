@@ -20,11 +20,13 @@
 - [x] Implement finite-difference gradient checking utility with tight numerical tolerances.
 - [x] Build cross-language numerical parity test harness (`tests/parity/test_numerical_parity.py`).
 
-## Milestone 2: Neural Network Primitives
-- [ ] Implement `Module`, `Parameter`, and state dictionary serialization.
-- [ ] Implement `Linear`, `MLP`, `Embedding`, `LayerNorm`, `RMSNorm`, and activations (`ReLU`, `GELU`, `SiLU`).
-- [ ] Implement `SGD`, `Adam`, `AdamW` optimizers with weight decay.
-- [ ] Implement deterministic cross-language checkpoint exchange format (JSON/binary).
+## Milestone 2: Neural Network Primitives & Optimizers (Completed)
+- [x] Formulate formal mathematical specifications (`docs/mathematics/nn_and_optimizers.md`).
+- [x] Implement `Module`, `Parameter`, and state dictionary serialization in Python and C++23.
+- [x] Implement `Linear`, `MLP`, `Embedding`, `LayerNorm`, `RMSNorm`, `Dropout`, and activations (`ReLU`, `GELU`, `SiLU`, `Softmax`, `LogSoftmax`).
+- [x] Implement `SGD`, `Adam`, `AdamW` optimizers with decoupled weight decay, learning rate schedulers, and gradient clipping.
+- [x] Implement language-agnostic JSON checkpoint exchange format with exact IEEE-754 precision.
+- [x] Build cross-language checkpoint and optimization parity test suite (`tests/parity/test_checkpoint_parity.py`).
 
 ## Milestone 3: Transformer Engine
 - [ ] Implement Scaled Dot-Product Attention from first principles.

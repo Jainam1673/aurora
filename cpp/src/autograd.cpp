@@ -287,4 +287,26 @@ std::vector<std::shared_ptr<Tensor>> LayerNormNode::backward(const std::shared_p
     return {gx, ggamma, gbeta};
 }
 
+std::vector<std::shared_ptr<Tensor>> EmbeddingNode::backward(const std::shared_ptr<Tensor>& grad_output) {
+    const auto& w = inputs_[0];
+    if (!w->requires_grad()) {
+        return {nullptr};
+    }
+    auto grad_weight = Tensor::zeros(w->shape());
+    size_t embed_dim = w->shape()[1];
+    auto grad_out_vec = grad_output->to_vector();
+    double* grad_w_data = grad_weight->data();
+
+    for (size_t i = 0; i < indices_.size(); ++i) {
+        size_t idx = indices_[i];
+        if (idx >= w->shape()[0]) {
+            throw std::runtime_error("Index out of bounds in embedding backward");
+        }
+        for (size_t d = 0; d < embed_dim; ++d) {
+            grad_w_data[idx * embed_dim + d] += grad_out_vec[i * embed_dim + d];
+        }
+    }
+    return {grad_weight};
+}
+
 } // namespace aurora

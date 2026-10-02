@@ -182,4 +182,15 @@ private:
     int axis_;
 };
 
+class EmbeddingNode : public Node {
+public:
+    EmbeddingNode(std::shared_ptr<Tensor> weight, std::vector<size_t> indices, std::vector<size_t> indices_shape)
+        : Node({std::move(weight)}), indices_(std::move(indices)), indices_shape_(std::move(indices_shape)) {}
+    std::vector<std::shared_ptr<Tensor>> backward(const std::shared_ptr<Tensor>& grad_output) override;
+
+private:
+    std::vector<size_t> indices_;
+    std::vector<size_t> indices_shape_;
+};
+
 } // namespace aurora

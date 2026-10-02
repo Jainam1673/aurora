@@ -1,9 +1,9 @@
 # AURORA Project Status
 
-## Current Milestone: M1 — Numerical Core & Autograd (Completed)
+## Current Milestone: M2 — Neural Network Primitives & Optimizers (Completed)
 
 **Overall Health:** GREEN  
-**Target Milestone:** M1 (Complete) $\to$ Transitioning to M2 (Neural Network Primitives & Optimizers)  
+**Target Milestone:** M2 (Complete) $\to$ Transitioning to M3 (Transformer Engine)  
 **Last Updated:** 2026-10-03  
 
 ---
@@ -49,62 +49,57 @@
 - [x] Implemented dedicated C++ parity runner binary `aurora_parity_runner` (`cpp/src/parity_runner.cpp`).
 - [x] Implemented cross-language numerical parity test suite (`tests/parity/test_numerical_parity.py`).
 
+### Milestone M2: Neural Network Primitives & Optimizers
+- [x] Mathematical specification: `docs/mathematics/nn_and_optimizers.md`.
+- [x] Python neural network primitives: `Parameter`, `Module`, `Linear`, `Embedding`, `LayerNorm`, `RMSNorm`, `Dropout`, `ReLU`, `GELU`, `SiLU`, `Softmax`, `LogSoftmax`, `Sequential`, `MLP`, `ResidualBlock`.
+- [x] Python optimizers and utilities: `Optimizer`, `SGD`, `Adam`, `AdamW`, `clip_grad_norm`, `clip_grad_value`, `ConstantLR`, `LinearWarmupDecayLR`, `CosineAnnealingLR`.
+- [x] Python checkpoint serialization and deserialization (`python/aurora/checkpoint.py`).
+- [x] C++23 native neural network primitives (`cpp/include/aurora/nn.hpp`, `cpp/src/nn.cpp`).
+- [x] C++23 native optimizers and schedulers (`cpp/include/aurora/optim.hpp`, `cpp/src/optim.cpp`).
+- [x] C++23 zero-dependency JSON checkpoint serializer and deserializer (`cpp/include/aurora/checkpoint.hpp`, `cpp/src/checkpoint.cpp`).
+- [x] C++23 GoogleTest suites for NN primitives and optimizers (`tests/cpp/test_nn.cpp`, `tests/cpp/test_optim.cpp`).
+- [x] Cross-language checkpoint and optimization parity test suite (`tests/parity/test_checkpoint_parity.py`).
+
 ---
 
 ## 3. Verified Artifacts & Test Results
 
 ### C++23 Native Build & GoogleTests
 - **GCC 16.2.1 (`ctest --preset debug`):**
-  - **19/19 passed (100%)** in `0.13s`.
-  - Targets: `aurora_cpp_smoke_test`, `aurora_cpp_tensor_test`, `aurora_cpp_gradcheck_test`.
+  - **32/32 passed (100%)** in `0.33s`.
+  - Targets: `aurora_cpp_smoke_test`, `aurora_cpp_tensor_test`, `aurora_cpp_gradcheck_test`, `aurora_cpp_nn_test`, `aurora_cpp_optim_test`.
 - **Clang 22.1.8 (`ctest --preset clang-debug`):**
-  - **19/19 passed (100%)** in `0.13s`.
+  - **32/32 passed (100%)** in `0.22s`.
 
 ### Python 3.14 Test Suite (`pytest`)
 - Command: `uv run pytest -v`
-- **37/37 passed (100%)** in `4.53s`:
+- **52/52 passed (100%)** in `4.34s`:
   - `tests/python/test_smoke.py`: 3 passed
   - `tests/python/test_tensor.py`: 7 passed
-  - `tests/python/test_gradcheck.py`: 14 passed (all operations verified with finite differences)
-  - `tests/python/test_autograd_properties.py`: 3 passed (Hypothesis property-based tests)
-  - `tests/parity/test_numerical_parity.py`: 10 passed (Cross-language parity tests)
+  - `tests/python/test_gradcheck.py`: 14 passed
+  - `tests/python/test_autograd_properties.py`: 3 passed
+  - `tests/python/test_nn.py`: 8 passed
+  - `tests/python/test_optim.py`: 5 passed
+  - `tests/parity/test_numerical_parity.py`: 10 passed
+  - `tests/parity/test_checkpoint_parity.py`: 2 passed
 
-### Cross-Language Numerical Parity (`tests/parity/`)
-- All 10 parity tests passed with $\text{atol} = 10^{-10}$ and $\text{rtol} = 10^{-7}$ across both forward pass and input backward adjoints:
-  - `add` (including broadcasting)
-  - `sub`
-  - `mul` (including broadcasting)
-  - `div`
-  - `matmul` (2D and batched)
-  - `sum` and `mean`
-  - `exp`, `log`, `sqrt`
-  - `relu`, `gelu`, `silu`
-  - `softmax`, `log_softmax`
-  - `layer_norm`
+### Cross-Language Parity Benchmarks
+- All tensor operations pass at error tolerance $< 10^{-10}$.
+- Multi-layer MLP with AdamW optimizer step: exact weight and moment buffer match across Python and C++ at $< 10^{-10}$ error.
+- Multi-step (3 steps) optimization parity: exact lockstep maintained across consecutive mini-batches.
 
 ### Code Quality & Static Analysis
-- **Ruff:** `All checks passed! 11 files already formatted.`
-- **Mypy:** `Success: no issues found in 11 source files` (strict typechecking enabled).
+- **Ruff:** `All checks passed! 25 files already formatted.`
+- **Mypy:** `Success: no issues found in 25 source files` (strict typechecking enabled).
 
 ---
 
-## 4. Not Yet Implemented (Scoped for Subsequent Milestones)
+## 4. Next Milestone: M3 — Transformer Engine
 
-- **Neural Network Primitives (M2):** `Module`, `Parameter`, `Linear`, `MLP`, `RMSNorm`, `SGD`, `Adam`, `AdamW`, state dict checkpoint exchange.
-- **Transformer Engine (M3):** Scaled dot-product attention, multi-head attention, causal autoregressive blocks.
-- **RL Primitives (M4):** PPO, SAC, GAE, environment abstraction.
-- **World Models (M5):** Latent encoder, dynamics predictor, reward model, rollout engine.
-- **Reproductions (M6):** Dreamer, PlaNet, TD-MPC, MuZero.
-- **Uncertainty & AURORA (M7 & M8):** Ensembles, calibration curves, adaptive horizon $H_t$, pessimistic planning.
-- **Benchmarking & Paper (M9 & M10):** Multi-seed evaluation, IQM bootstrap, publication manuscript.
-
----
-
-## 5. Next Milestone: M2 — Neural Network Primitives & Optimizers
-
-Primary objectives for M2:
-1. `Module` and `Parameter` abstractions in Python and C++23.
-2. Foundational layers: `Linear`, `MLP`, `Embedding`, `LayerNorm`, `RMSNorm`, `Dropout`, residual blocks.
-3. First-principles optimizers: `SGD`, `Adam`, `AdamW` with decoupled weight decay, learning rate schedulers, and gradient clipping.
-4. Deterministic cross-language checkpoint exchange format (JSON/binary).
-5. Toy regression/classification training parity tests between Python and C++.
+Primary objectives for M3:
+1. Mathematical specification for attention and transformer blocks (`docs/mathematics/transformer.md`).
+2. Scaled Dot-Product Attention from first principles (with numerical stability scaling and causal masking).
+3. Multi-Head Attention (MHA) module with query/key/value projections and out projection.
+4. Causal Self-Attention block with residual connection and pre-LayerNorm / RMSNorm.
+5. Causal Transformer Decoder stack with positional embeddings (learned and rotary / RoPE).
+6. Cross-language numerical parity tests between Python and C++23 native implementations.
