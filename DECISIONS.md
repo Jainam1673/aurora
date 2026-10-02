@@ -55,3 +55,16 @@ This document records key architectural, scientific, and engineering decisions m
 - **Context:** Cross-language numerical parity between Python 3.14 and C++23 native systems requires exact state serialization and deserialization of neural network parameters, optimizer states (such as AdamW first and second moments), and metadata without binary platform endianness or compiler-specific struct layout discrepancies.
 - **Decision:** Use a human-auditable JSON checkpoint format with IEEE-754 17-digit precision (`std::setprecision(17)`). Maintain strict parameter registration order in C++ via `std::vector<std::pair<std::string, std::shared_ptr<Tensor>>>` matching Python's insertion-ordered dictionary, and adopt standard moment names (`exp_avg`, `exp_avg_sq`).
 - **Consequences:** Completely zero-dependency checkpoint parser in C++, guaranteed $< 10^{-10}$ floating-point parity between Python and C++ model weights and optimizer buffers across multiple consecutive optimization steps.
+
+---
+
+## ADR-007: Pre-LayerNorm Transformer Architecture & Multi-Dimensional Matrix Transposition
+- **Date:** 2026-10-03
+- **Status:** Accepted
+- **Context:** Transformer architectures in model-based RL (decision transformers, trajectory transformers, world model dynamics) require stable gradient propagation across long horizons and efficient batched multi-head attention. Traditional Post-LN transformers suffer from unstable initialization and gradient vanishing, while multi-head tensor operations require swapping arbitrary axes in 4D tensors $(B, H, T, d_k)$.
+- **Decision:**
+  1. Standardize on the Pre-LN / Pre-RMSNorm residual architecture: $x_{l+1} = x_l + \text{MHA}(\text{Norm}(x_l))$, ensuring clean residual gradient highways without auxiliary warmup tricks.
+  2. Implement `swapaxes(axis1, axis2)` and batched matrix transposition `.mT` (swapping only the final two dimensions $[-1, -2]$) in both Python and C++23 native `Tensor`.
+  3. Ensure autograd topological tape execution correctly handles non-contiguous strided views via automatic contiguous reconciliation during matmul and reductions.
+  4. Enforce strict submodule registration order matching dataflow order (`norm1`, `attn`, `norm2`, `linear1`, `linear2`) to ensure identical checkpoint serialization and optimization parity.
+- **Consequences:** Guaranteed $< 10^{-10}$ mathematical parity across Python and C++ for both non-causal and causal Multi-Head Attention, stable multi-layer autoregressive rollouts, and seamless serialization.

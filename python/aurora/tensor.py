@@ -197,6 +197,20 @@ class Tensor:
             out.creator = TransposeBackward(self, axes)
         return out
 
+    def swapaxes(self, axis1: int, axis2: int) -> Tensor:
+        a1 = axis1 if axis1 >= 0 else self.ndim + axis1
+        a2 = axis2 if axis2 >= 0 else self.ndim + axis2
+        axes = list(range(self.ndim))
+        axes[a1], axes[a2] = axes[a2], axes[a1]
+        return self.transpose(*axes)
+
+    @property
+    def mT(self) -> Tensor:
+        """Matrix transpose swapping the last two dimensions."""
+        if self.ndim < 2:
+            raise ValueError(f"mT requires at least 2 dimensions, got {self.ndim}")
+        return self.swapaxes(-1, -2)
+
     # --- Reductions ---
     def sum(self, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Tensor:
         out_data = (

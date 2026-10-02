@@ -33,3 +33,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cross-language optimization parity suite: `tests/parity/test_checkpoint_parity.py`, verifying $< 10^{-10}$ error lockstep between Python and C++ across forward, autograd backward, and AdamW updates.
   - Mathematical specification in `docs/mathematics/nn_and_optimizers.md`.
   - ADR-006: Language-Agnostic JSON Checkpoint Exchange Format & Parameter Registration Order.
+- **M3 Transformer Engine & Attention**:
+  - Mathematical specification: `docs/mathematics/transformer.md`.
+  - Python & C++ batched matrix transposition: `swapaxes` and `.mT` / `transpose()`.
+  - Scaled Dot-Product Attention from first principles with numerical scaling and upper-triangular additive causal masking (`create_causal_mask`, `scaled_dot_product_attention`).
+  - Rotary Position Embeddings (`apply_rotary_pos_emb`) preserving vector Euclidean norms.
+  - Multi-Head Attention (`MultiHeadAttention`) with linear projections for queries, keys, values, and outputs.
+  - `TransformerBlock` with Pre-LayerNorm / Pre-RMSNorm, residual connections, and configurable FFN (`Linear -> GELU/ReLU/SiLU -> Linear`).
+  - `TransformerDecoder` autoregressive sequence model with token embeddings or continuous projection, learned positional embeddings, stacked transformer blocks, final normalization, prediction head, and autoregressive `generate()`.
+  - C++23 native implementations (`cpp/include/aurora/attention.hpp`, `cpp/src/attention.cpp`, `cpp/include/aurora/transformer.hpp`, `cpp/src/transformer.cpp`).
+  - Python unit test suite (`tests/python/test_transformer.py`: 9/9 passed, 63/63 repo total).
+  - C++23 GoogleTest suite (`tests/cpp/test_transformer.cpp`: 8/8 passed, 40/40 repo total on GCC and Clang).
+  - Cross-language numerical parity suite (`tests/parity/test_transformer_parity.py`) verifying $< 10^{-10}$ error on attention forward/backward and multi-parameter transformer block optimization.
+  - Benchmark suite (`benchmarks/benchmark_transformer.py`).

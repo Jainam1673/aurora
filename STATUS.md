@@ -1,9 +1,9 @@
 # AURORA Project Status
 
-## Current Milestone: M2 — Neural Network Primitives & Optimizers (Completed)
+## Current Milestone: M3 — Transformer Engine & Attention (Completed)
 
 **Overall Health:** GREEN  
-**Target Milestone:** M2 (Complete) $\to$ Transitioning to M3 (Transformer Engine)  
+**Target Milestone:** M3 (Complete) $\to$ Transitioning to M4 (World Models & Uncertainty Calibration)  
 **Last Updated:** 2026-10-03  
 
 ---
@@ -60,46 +60,63 @@
 - [x] C++23 GoogleTest suites for NN primitives and optimizers (`tests/cpp/test_nn.cpp`, `tests/cpp/test_optim.cpp`).
 - [x] Cross-language checkpoint and optimization parity test suite (`tests/parity/test_checkpoint_parity.py`).
 
+### Milestone M3: Transformer Engine & Attention
+- [x] Mathematical specification: `docs/mathematics/transformer.md`.
+- [x] Batched multi-dimensional tensor matrix transposition (`swapaxes` and `.mT` / `transpose()`) in Python and C++23.
+- [x] Scaled Dot-Product Attention from first principles with numerical scaling and upper-triangular additive causal masking (`create_causal_mask`, `scaled_dot_product_attention`).
+- [x] Rotary Position Embeddings (RoPE) Givens rotations preserving vector Euclidean norms (`apply_rotary_pos_emb`).
+- [x] Multi-Head Attention (MHA) module with query, key, value, and output linear projections.
+- [x] Pre-LayerNorm and Pre-RMSNorm `TransformerBlock` with residual connections and configurable FFN (`Linear -> GELU/ReLU/SiLU -> Linear`).
+- [x] Autoregressive `TransformerDecoder` supporting discrete token embeddings or continuous state projections, learned positional embeddings, stacked transformer blocks, final normalization, output projection head, and greedy/temperature autoregressive token generation.
+- [x] C++23 native peer implementations: `cpp/include/aurora/attention.hpp`, `cpp/src/attention.cpp`, `cpp/include/aurora/transformer.hpp`, `cpp/src/transformer.cpp`.
+- [x] Zero compiler warnings across both GCC 16.2.1 and Clang 22.1.8.
+- [x] Python test suite: 9/9 tests passed in `tests/python/test_transformer.py` (total 63 tests in repo, 100% pass).
+- [x] C++23 test suite: 8/8 tests passed in `tests/cpp/test_transformer.cpp` (total 40 tests in repo, 100% pass).
+- [x] Bidirectional cross-language parity:
+  - Scaled Dot-Product Attention forward and autograd VJP parity $< 10^{-10}$ error.
+  - Multi-parameter Transformer Block forward, backward, and AdamW optimization step parity $< 10^{-10}$ error on parameters and momentum buffers.
+
 ---
 
 ## 3. Verified Artifacts & Test Results
 
 ### C++23 Native Build & GoogleTests
 - **GCC 16.2.1 (`ctest --preset debug`):**
-  - **32/32 passed (100%)** in `0.33s`.
-  - Targets: `aurora_cpp_smoke_test`, `aurora_cpp_tensor_test`, `aurora_cpp_gradcheck_test`, `aurora_cpp_nn_test`, `aurora_cpp_optim_test`.
+  - **40/40 passed (100%)** in `0.32s`.
+  - Targets: `aurora_cpp_smoke_test`, `aurora_cpp_tensor_test`, `aurora_cpp_gradcheck_test`, `aurora_cpp_nn_test`, `aurora_cpp_optim_test`, `aurora_cpp_transformer_test`.
 - **Clang 22.1.8 (`ctest --preset clang-debug`):**
-  - **32/32 passed (100%)** in `0.22s`.
+  - **40/40 passed (100%)** in `0.33s`.
 
 ### Python 3.14 Test Suite (`pytest`)
 - Command: `uv run pytest -v`
-- **52/52 passed (100%)** in `4.34s`:
+- **63/63 passed (100%)** in `4.99s`:
   - `tests/python/test_smoke.py`: 3 passed
   - `tests/python/test_tensor.py`: 7 passed
   - `tests/python/test_gradcheck.py`: 14 passed
   - `tests/python/test_autograd_properties.py`: 3 passed
   - `tests/python/test_nn.py`: 8 passed
   - `tests/python/test_optim.py`: 5 passed
+  - `tests/python/test_transformer.py`: 9 passed
   - `tests/parity/test_numerical_parity.py`: 10 passed
   - `tests/parity/test_checkpoint_parity.py`: 2 passed
+  - `tests/parity/test_transformer_parity.py`: 2 passed
 
 ### Cross-Language Parity Benchmarks
 - All tensor operations pass at error tolerance $< 10^{-10}$.
-- Multi-layer MLP with AdamW optimizer step: exact weight and moment buffer match across Python and C++ at $< 10^{-10}$ error.
-- Multi-step (3 steps) optimization parity: exact lockstep maintained across consecutive mini-batches.
+- Attention forward and backward: exact match at $< 10^{-10}$ error.
+- TransformerBlock + AdamW step: exact weight, bias, `exp_avg`, and `exp_avg_sq` match across Python and C++ at $< 10^{-10}$ error.
 
 ### Code Quality & Static Analysis
-- **Ruff:** `All checks passed! 25 files already formatted.`
-- **Mypy:** `Success: no issues found in 25 source files` (strict typechecking enabled).
+- **Ruff:** `All checks passed! 29 source files checked.`
+- **Mypy:** `Success: no issues found in 29 source files` (strict typechecking enabled).
 
 ---
 
-## 4. Next Milestone: M3 — Transformer Engine
+## 4. Next Milestone: M4 — World Models & Uncertainty Calibration
 
-Primary objectives for M3:
-1. Mathematical specification for attention and transformer blocks (`docs/mathematics/transformer.md`).
-2. Scaled Dot-Product Attention from first principles (with numerical stability scaling and causal masking).
-3. Multi-Head Attention (MHA) module with query/key/value projections and out projection.
-4. Causal Self-Attention block with residual connection and pre-LayerNorm / RMSNorm.
-5. Causal Transformer Decoder stack with positional embeddings (learned and rotary / RoPE).
-6. Cross-language numerical parity tests between Python and C++23 native implementations.
+Primary objectives for M4:
+1. Probabilistic and ensemble world model formulations.
+2. Latent transition dynamics (continuous and discrete representations).
+3. Uncertainty quantification metrics: ensemble variance, epistemic vs. aleatoric decomposition, calibrated rollout horizons.
+4. C++23 native simulation and rollout engine.
+5. Cross-language numerical parity tests for world model rollouts and uncertainty estimators.

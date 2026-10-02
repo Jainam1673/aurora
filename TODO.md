@@ -28,11 +28,16 @@
 - [x] Implement language-agnostic JSON checkpoint exchange format with exact IEEE-754 precision.
 - [x] Build cross-language checkpoint and optimization parity test suite (`tests/parity/test_checkpoint_parity.py`).
 
-## Milestone 3: Transformer Engine
-- [ ] Implement Scaled Dot-Product Attention from first principles.
-- [ ] Implement Multi-Head Attention with causal autoregressive masking.
-- [ ] Implement Transformer Encoder / Decoder blocks and stacked architecture.
-- [ ] Create benchmark suite comparing Python and C++ attention throughput (tokens/sec, memory).
+## Milestone 3: Transformer Engine (Completed)
+- [x] Formulate mathematical specifications (`docs/mathematics/transformer.md`).
+- [x] Implement batched tensor matrix transpose (`swapaxes`, `.mT` / `transpose()`) in Python and C++23.
+- [x] Implement Scaled Dot-Product Attention from first principles with causal masking.
+- [x] Implement Rotary Positional Embeddings (RoPE) and learned positional embeddings.
+- [x] Implement Multi-Head Attention (MHA) with Q, K, V, and out projections.
+- [x] Implement Pre-LayerNorm / Pre-RMSNorm `TransformerBlock` and autoregressive `TransformerDecoder`.
+- [x] Implement C++23 native peer implementations (`attention.hpp`/`.cpp`, `transformer.hpp`/`.cpp`).
+- [x] Build cross-language attention and transformer block optimization parity tests (`tests/parity/test_transformer_parity.py`).
+- [x] Create benchmark suite for attention throughput and generation latency (`benchmarks/benchmark_transformer.py`).
 
 ## Milestone 4: RL Foundation
 - [ ] Define standardized `Environment` interface in Python and C++.

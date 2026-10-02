@@ -64,6 +64,8 @@ add_library(aurora_core
     cpp/src/nn.cpp
     cpp/src/optim.cpp
     cpp/src/checkpoint.cpp
+    cpp/src/attention.cpp
+    cpp/src/transformer.cpp
 )
 add_library(aurora::core ALIAS aurora_core)
 
@@ -160,4 +162,15 @@ if(AURORA_BUILD_TESTS)
             GTest::gtest_main
     )
     gtest_discover_tests(aurora_cpp_optim_test)
+
+    # Attention & Transformer Test
+    add_executable(aurora_cpp_transformer_test
+        tests/cpp/test_transformer.cpp
+    )
+    target_link_libraries(aurora_cpp_transformer_test
+        PRIVATE
+            aurora::core
+            GTest::gtest_main
+    )
+    gtest_discover_tests(aurora_cpp_transformer_test)
 endif()

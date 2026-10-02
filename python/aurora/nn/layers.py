@@ -246,3 +246,33 @@ class ResidualBlock(Module):
         res = cast(Tensor, self.block(x))
         sc = cast(Tensor, self.shortcut(x)) if self.shortcut is not None else x
         return sc + res
+
+
+class ModuleList(Module):
+    """Holds submodules in a list and properly registers them with the Module system."""
+
+    def __init__(self, modules: Sequence[Module] | None = None) -> None:
+        super().__init__()
+        self._module_list: list[Module] = []
+        if modules is not None:
+            for mod in modules:
+                self.append(mod)
+
+    def append(self, module: Module) -> None:
+        idx = len(self._module_list)
+        self._module_list.append(module)
+        setattr(self, str(idx), module)
+
+    def extend(self, modules: Sequence[Module]) -> None:
+        for mod in modules:
+            self.append(mod)
+
+    def __len__(self) -> int:
+        return len(self._module_list)
+
+    def __iter__(self) -> Any:
+        return iter(self._module_list)
+
+    def __getitem__(self, idx: int) -> Module:
+        return self._module_list[idx]
+

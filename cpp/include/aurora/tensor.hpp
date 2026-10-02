@@ -69,7 +69,8 @@ public:
     // Shape Operations
     [[nodiscard]] std::shared_ptr<Tensor> reshape(const std::vector<size_t>& new_shape) const;
     [[nodiscard]] std::shared_ptr<Tensor> transpose(const std::vector<size_t>& axes) const;
-    [[nodiscard]] std::shared_ptr<Tensor> transpose() const; // Default 2D swap or reverse
+    [[nodiscard]] std::shared_ptr<Tensor> transpose() const; // Default 2D matrix transpose (swaps last two axes)
+    [[nodiscard]] std::shared_ptr<Tensor> swapaxes(int axis1, int axis2) const;
 
     // Reductions
     [[nodiscard]] std::shared_ptr<Tensor> sum(std::optional<int> axis = std::nullopt, bool keepdims = false) const;

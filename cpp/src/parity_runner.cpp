@@ -2,6 +2,8 @@
 #include "aurora/nn.hpp"
 #include "aurora/optim.hpp"
 #include "aurora/checkpoint.hpp"
+#include "aurora/attention.hpp"
+#include "aurora/transformer.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -135,6 +137,35 @@ int main(int argc, char** argv) {
         return 0;
     }
 
+    if (argc >= 5 && std::string(argv[1]) == "--transformer-step") {
+        std::string in_ckpt = argv[2];
+        std::string x_ckpt = argv[3];
+        std::string out_ckpt = argv[4];
+
+        size_t d_model = 16;
+        size_t num_heads = 4;
+        size_t d_ff = 32;
+
+        auto block = std::make_shared<TransformerBlock>(
+            d_model, num_heads, d_ff, "layernorm", "gelu", 0.0, true);
+        auto opt = std::make_shared<optim::AdamW>(block->parameters(), 0.01, 0.9, 0.999, 1e-8, 0.01);
+
+        checkpoint::load_checkpoint(in_ckpt, block.get(), opt.get());
+
+        auto x_data = checkpoint::load_checkpoint(x_ckpt);
+        auto x = x_data.model_state_dict.at("x");
+
+        opt->zero_grad();
+        auto [out, attn] = block->forward_with_attention(x, nullptr, true);
+        auto loss = out->sum();
+        loss->backward();
+        opt->step();
+
+        checkpoint::save_checkpoint(out_ckpt, *block, opt.get(), {{"step", std::to_string(opt->step_count())}});
+        std::cout << "STATUS: OK\n";
+        return 0;
+    }
+
     auto req = parse_request(std::cin);
 
     std::vector<std::shared_ptr<Tensor>> inps;
@@ -177,6 +208,13 @@ int main(int argc, char** argv) {
         auto gamma = (inps.size() > 1) ? inps[1] : nullptr;
         auto beta = (inps.size() > 2) ? inps[2] : nullptr;
         out = inps[0]->layer_norm(gamma, beta, req.eps, req.axis.value_or(-1));
+    } else if (req.op == "attention") {
+        auto q = inps[0];
+        auto k = inps[1];
+        auto v = inps[2];
+        std::shared_ptr<Tensor> mask = (inps.size() > 3) ? inps[3] : nullptr;
+        auto attn_res = scaled_dot_product_attention(q, k, v, mask);
+        out = attn_res.output;
     } else {
         std::cerr << "Unknown op: " << req.op << "\n";
         return 1;

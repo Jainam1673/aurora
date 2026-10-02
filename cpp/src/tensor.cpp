@@ -429,13 +429,24 @@ std::shared_ptr<Tensor> Tensor::transpose(const std::vector<size_t>& axes) const
     return result;
 }
 
-std::shared_ptr<Tensor> Tensor::transpose() const {
-    if (ndim() == 2) {
-        return transpose(std::vector<size_t>{1, 0});
+std::shared_ptr<Tensor> Tensor::swapaxes(int axis1, int axis2) const {
+    int n = static_cast<int>(ndim());
+    int a1 = (axis1 >= 0) ? axis1 : n + axis1;
+    int a2 = (axis2 >= 0) ? axis2 : n + axis2;
+    if (a1 < 0 || a1 >= n || a2 < 0 || a2 >= n) {
+        throw std::out_of_range("swapaxes axis out of range");
     }
     std::vector<size_t> axes(ndim());
-    std::iota(axes.rbegin(), axes.rend(), 0);
+    std::iota(axes.begin(), axes.end(), 0);
+    std::swap(axes[static_cast<size_t>(a1)], axes[static_cast<size_t>(a2)]);
     return transpose(axes);
+}
+
+std::shared_ptr<Tensor> Tensor::transpose() const {
+    if (ndim() < 2) {
+        throw std::invalid_argument("transpose() requires rank at least 2");
+    }
+    return swapaxes(-1, -2);
 }
 
 std::shared_ptr<Tensor> Tensor::sum(std::optional<int> axis, bool keepdims) const {
