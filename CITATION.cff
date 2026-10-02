@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use AURORA in your research, please cite it as below."
+title: "AURORA: Adaptive Uncertainty-calibrated Rollouts and Optimization for Reinforcement Agents"
+authors:
+  - name: "AURORA Research Lab"
+date-released: 2026-10-03
+url: "https://github.com/aurora-rl/aurora"
+type: software
+license: Apache-2.0
+keywords:
+  - reinforcement learning
+  - world models
+  - model-based rl
+  - uncertainty calibration
+  - adaptive planning
+  - c++23
+  - python

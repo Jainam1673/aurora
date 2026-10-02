@@ -1,0 +1,83 @@
+# Git ignore for AURORA: Adaptive Uncertainty-calibrated Rollouts and Optimization for Reinforcement Agents
+
+# Python / uv
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+.venv/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing & Type Checking
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+htmlcov/
+.nox/
+.tox/
+
+# C++ / CMake
+build/
+build-*/
+cmake-build-*/
+CMakeUserPresets.json
+compile_commands.json
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+_deps/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+
+# CUDA / NVIDIA
+*.nvlog
+*.cubin
+*.ptx
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Experiments / Data (keep directory structure via .gitkeep)
+results/*
+!results/.gitkeep
+datasets/*
+!datasets/.gitkeep
+experiments/logs/*
+!experiments/logs/.gitkeep
