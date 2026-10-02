@@ -12,13 +12,13 @@
 - [x] Configure GitHub Actions CI workflow for linting, building, and testing (`.github/workflows/ci.yml`).
 - [x] Establish living governance docs: `STATUS.md`, `ROADMAP.md`, `ARCHITECTURE.md`, `DECISIONS.md`, `TODO.md`.
 
-## Milestone 1: Numerical Core & Autograd
-- [ ] Design Python `Tensor` reference class with storage, shape, and strides.
-- [ ] Implement C++23 `aurora::Tensor` class with contiguous allocation and strided views.
-- [ ] Implement fundamental tensor operations: add, sub, mul, div, matmul, transpose, reshape, reductions.
-- [ ] Implement reverse-mode autograd tape in Python and C++.
-- [ ] Implement finite-difference gradient checking utility with tight numerical tolerances.
-- [ ] Build cross-language numerical parity test harness (`tests/parity/test_tensor_parity.py`).
+## Milestone 1: Numerical Core & Autograd (Completed)
+- [x] Design Python `Tensor` reference class with storage, shape, and strides.
+- [x] Implement C++23 `aurora::Tensor` class with contiguous allocation and strided views.
+- [x] Implement fundamental tensor operations: add, sub, mul, div, matmul, transpose, reshape, reductions.
+- [x] Implement reverse-mode autograd tape in Python and C++.
+- [x] Implement finite-difference gradient checking utility with tight numerical tolerances.
+- [x] Build cross-language numerical parity test harness (`tests/parity/test_numerical_parity.py`).
 
 ## Milestone 2: Neural Network Primitives
 - [ ] Implement `Module`, `Parameter`, and state dictionary serialization.

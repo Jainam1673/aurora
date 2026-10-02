@@ -1,9 +1,9 @@
 # AURORA Project Status
 
-## Current Milestone: M0 — Repository Bootstrap
+## Current Milestone: M1 — Numerical Core & Autograd (Completed)
 
 **Overall Health:** GREEN  
-**Target Milestone:** M0 (Complete) $\to$ Transitioning to M1 (Numerical Core)  
+**Target Milestone:** M1 (Complete) $\to$ Transitioning to M2 (Neural Network Primitives & Optimizers)  
 **Last Updated:** 2026-10-03  
 
 ---
@@ -29,61 +29,82 @@
 
 ## 2. Completed Deliverables
 
+### Milestone M0: Repository Bootstrap
 - [x] Initialized Git repository with clean main branch and `.gitignore`.
 - [x] Established project directory hierarchy according to Section 4 architecture.
 - [x] Configured Python 3.14 project with `pyproject.toml` (`hatchling` backend) and reproducible `uv.lock`.
 - [x] Configured native C++23 build tree with `CMakeLists.txt` and multi-compiler presets (`CMakePresets.json`).
-- [x] Built minimal Python package `aurora` (`python/aurora/__init__.py`, `core.py`, `version.py`).
-- [x] Built native C++23 static library `aurora::core` and executable CLI `aurora_cli`.
-- [x] Created Python smoke test suite (`tests/python/test_smoke.py`).
-- [x] Created C++23 smoke test suite with GoogleTest (`tests/cpp/test_smoke.cpp`).
-- [x] Implemented GitHub Actions CI workflow covering Python 3.14 lint/typecheck/test and dual C++23 compiler builds (GCC & Clang).
+- [x] Built minimal Python package `aurora` and native C++23 library `aurora::core`.
 - [x] Published foundational blueprints: `README.md`, `ARCHITECTURE.md`, `ROADMAP.md`, `DECISIONS.md`, `TODO.md`, `STATUS.md`.
+
+### Milestone M1: Numerical Core & Autograd
+- [x] Formulated formal mathematical specification in `docs/mathematics/numerical_core.md`.
+- [x] Implemented Python reference `Tensor` with strided views, broadcasting, and factory functions (`python/aurora/tensor.py`).
+- [x] Implemented Python reverse-mode automatic differentiation tape with unbroadcasting logic (`python/aurora/autograd.py`).
+- [x] Implemented Python finite-difference gradient checker (`python/aurora/gradcheck.py`).
+- [x] Implemented C++23 native `aurora::Tensor` class with contiguous allocation, views, and C-strides (`cpp/include/aurora/tensor.hpp`, `cpp/src/tensor.cpp`).
+- [x] Implemented C++23 reverse-mode autograd engine with computation graph DAG traversal (`cpp/include/aurora/autograd.hpp`, `cpp/src/autograd.cpp`).
+- [x] Implemented C++23 finite-difference gradient checker (`cpp/include/aurora/gradcheck.hpp`).
+- [x] Supported full operator set: add, sub, mul, div, matmul, sum, mean, reshape, transpose, exp, log, sqrt, relu, gelu, silu, softmax, log_softmax, layer_norm.
+- [x] Implemented dedicated C++ parity runner binary `aurora_parity_runner` (`cpp/src/parity_runner.cpp`).
+- [x] Implemented cross-language numerical parity test suite (`tests/parity/test_numerical_parity.py`).
 
 ---
 
 ## 3. Verified Artifacts & Test Results
 
-### C++23 Native Build & Tests
-- **GCC 16.2.1 (`cmake --preset debug`):**
-  - Targets: `aurora_core` (static library), `aurora_cli` (binary), `aurora_cpp_smoke_test` (GoogleTest).
-  - Status: Built cleanly with zero warnings (`-Wall -Wextra -Wpedantic -Wshadow -Wnon-virtual-dtor -Wconversion`).
-  - Tests: `3/3` passed (100%) in `0.02s`:
-    - `AuroraSmokeTest.VersionIntegrity`: Passed (0 ms)
-    - `AuroraSmokeTest.DescriptionNonEmpty`: Passed (10 ms)
-    - `AuroraSmokeTest.SystemInfoValid`: Passed (10 ms, standard $\ge 202302\text{L}$)
-- **Clang 22.1.8 (`cmake --preset clang-debug`):**
-  - Targets: Built cleanly.
-  - Tests: `3/3` passed (100%) in `0.01s`.
-- **Native Binary Execution (`./build/debug/aurora_cli`):**
-  - Successfully executed reporting C++ standard 202302 and compiler metadata via C++23 `std::println`.
+### C++23 Native Build & GoogleTests
+- **GCC 16.2.1 (`ctest --preset debug`):**
+  - **19/19 passed (100%)** in `0.13s`.
+  - Targets: `aurora_cpp_smoke_test`, `aurora_cpp_tensor_test`, `aurora_cpp_gradcheck_test`.
+- **Clang 22.1.8 (`ctest --preset clang-debug`):**
+  - **19/19 passed (100%)** in `0.13s`.
 
-### Python 3.14 Environment & Tests
-- **Virtual Environment:** Configured via `uv` with Python 3.14.8.
-- **Lockfile Integrity:** Deterministic resolution recorded in `uv.lock`.
-- **Smoke Tests:** Verified via `pytest` and `mypy` strict type checking.
+### Python 3.14 Test Suite (`pytest`)
+- Command: `uv run pytest -v`
+- **37/37 passed (100%)** in `4.53s`:
+  - `tests/python/test_smoke.py`: 3 passed
+  - `tests/python/test_tensor.py`: 7 passed
+  - `tests/python/test_gradcheck.py`: 14 passed (all operations verified with finite differences)
+  - `tests/python/test_autograd_properties.py`: 3 passed (Hypothesis property-based tests)
+  - `tests/parity/test_numerical_parity.py`: 10 passed (Cross-language parity tests)
+
+### Cross-Language Numerical Parity (`tests/parity/`)
+- All 10 parity tests passed with $\text{atol} = 10^{-10}$ and $\text{rtol} = 10^{-7}$ across both forward pass and input backward adjoints:
+  - `add` (including broadcasting)
+  - `sub`
+  - `mul` (including broadcasting)
+  - `div`
+  - `matmul` (2D and batched)
+  - `sum` and `mean`
+  - `exp`, `log`, `sqrt`
+  - `relu`, `gelu`, `silu`
+  - `softmax`, `log_softmax`
+  - `layer_norm`
+
+### Code Quality & Static Analysis
+- **Ruff:** `All checks passed! 11 files already formatted.`
+- **Mypy:** `Success: no issues found in 11 source files` (strict typechecking enabled).
 
 ---
 
-## 4. Not Yet Implemented (By Design for M0)
+## 4. Not Yet Implemented (Scoped for Subsequent Milestones)
 
-The following components are strictly scoped for subsequent milestones and were intentionally not implemented during M0 bootstrap:
-- **Tensors & Autograd (M1):** Custom tensor class, striding, broadcasting, and reverse-mode tape.
-- **Neural Network Primitives (M2):** Linear, LayerNorm, optimizers, state dict serialization.
-- **Transformer Architecture (M3):** Causal multi-head attention blocks.
-- **RL Primitives (M4):** PPO, SAC, and value estimators.
-- **World Models & Imagination (M5):** Latent state encoder and dynamics transitions.
-- **MBRL Reproductions (M6):** Dreamer, PlaNet, TD-MPC, and MuZero reproductions.
-- **Uncertainty & AURORA (M7 & M8):** Ensemble calibration, adaptive imagination horizon $H_t$.
-- **Benchmarking & Paper (M9 & M10):** Multi-seed evaluation, LaTeX manuscript.
+- **Neural Network Primitives (M2):** `Module`, `Parameter`, `Linear`, `MLP`, `RMSNorm`, `SGD`, `Adam`, `AdamW`, state dict checkpoint exchange.
+- **Transformer Engine (M3):** Scaled dot-product attention, multi-head attention, causal autoregressive blocks.
+- **RL Primitives (M4):** PPO, SAC, GAE, environment abstraction.
+- **World Models (M5):** Latent encoder, dynamics predictor, reward model, rollout engine.
+- **Reproductions (M6):** Dreamer, PlaNet, TD-MPC, MuZero.
+- **Uncertainty & AURORA (M7 & M8):** Ensembles, calibration curves, adaptive horizon $H_t$, pessimistic planning.
+- **Benchmarking & Paper (M9 & M10):** Multi-seed evaluation, IQM bootstrap, publication manuscript.
 
 ---
 
-## 5. Next Milestone: M1 — Numerical Core
+## 5. Next Milestone: M2 — Neural Network Primitives & Optimizers
 
-Primary objectives for M1:
-1. Mathematical specification and implementation of reference `Tensor` in Python and `aurora::Tensor` in C++23.
-2. Contiguous memory allocation, strided indexing, and multi-dimensional views.
-3. Reverse-mode automatic differentiation tape.
-4. Finite-difference numerical gradient validation harness.
-5. First cross-language numerical parity tests (`tests/parity/`).
+Primary objectives for M2:
+1. `Module` and `Parameter` abstractions in Python and C++23.
+2. Foundational layers: `Linear`, `MLP`, `Embedding`, `LayerNorm`, `RMSNorm`, `Dropout`, residual blocks.
+3. First-principles optimizers: `SGD`, `Adam`, `AdamW` with decoupled weight decay, learning rate schedulers, and gradient clipping.
+4. Deterministic cross-language checkpoint exchange format (JSON/binary).
+5. Toy regression/classification training parity tests between Python and C++.

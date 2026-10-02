@@ -30,17 +30,27 @@ jobs:
       - name: Sync dependencies
         run: uv sync --extra dev
 
+      - name: Install Ninja & CMake Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libgtest-dev
+
+      - name: Build C++ Parity Runner for Python Parity Tests
+        run: |
+          cmake --preset debug
+          cmake --build --preset debug --target aurora_parity_runner
+
       - name: Run Ruff Lint
-        run: uv run ruff check python tests/python
+        run: uv run ruff check python tests
 
       - name: Run Ruff Format Check
-        run: uv run ruff format --check python tests/python
+        run: uv run ruff format --check python tests
 
       - name: Run Mypy Typecheck
-        run: uv run mypy python tests/python
+        run: uv run mypy python tests/python tests/parity
 
-      - name: Run Pytest Smoke Suite
-        run: uv run pytest tests/python -v
+      - name: Run Pytest Test Suite
+        run: uv run pytest -v
 
   cpp23-gcc-build-and-test:
     name: C++23 GCC (Build & Test)

@@ -8,8 +8,8 @@ This roadmap outlines the sequenced progression of AURORA from bootstrap to publ
 
 | Milestone | Subsystem / Focus | Status | Key Deliverable |
 | :--- | :--- | :--- | :--- |
-| **M0** | Repository Bootstrap & Systems Foundation | **In Progress** | `uv`, CMake C++23, CI, dual-language smoke tests |
-| **M1** | Numerical Core & Autograd Tape | Queued | `Tensor`, reverse-mode autograd, gradient checks |
+| **M0** | Repository Bootstrap & Systems Foundation | **Completed** | `uv`, CMake C++23, CI, dual-language smoke tests |
+| **M1** | Numerical Core & Autograd Tape | **Completed** | `Tensor`, reverse-mode autograd, gradient checks |
 | **M2** | Neural Network Primitives & Optimizers | Queued | `Linear`, `MLP`, `LayerNorm`, `AdamW`, checkpointing |
 | **M3** | Transformer Engine & Attention | Queued | Causal MHA, Stacked Transformer, token/sec benchmarks |
 | **M4** | Reinforcement Learning Primitives | Queued | Bandits, TD($\lambda$), GAE, PPO, SAC |

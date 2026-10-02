@@ -59,6 +59,8 @@ endif()
 # Core Library
 add_library(aurora_core
     cpp/src/core.cpp
+    cpp/src/tensor.cpp
+    cpp/src/autograd.cpp
 )
 add_library(aurora::core ALIAS aurora_core)
 
@@ -76,6 +78,12 @@ add_executable(aurora_cli
 )
 target_link_libraries(aurora_cli PRIVATE aurora::core)
 
+# Parity Runner Binary
+add_executable(aurora_parity_runner
+    cpp/src/parity_runner.cpp
+)
+target_link_libraries(aurora_parity_runner PRIVATE aurora::core)
+
 # Testing
 if(AURORA_BUILD_TESTS)
     enable_testing()
@@ -89,11 +97,13 @@ if(AURORA_BUILD_TESTS)
             GIT_REPOSITORY https://github.com/google/googletest.git
             GIT_TAG v1.15.2
         )
-        # Prevent overriding parent project compiler/linker settings on Windows
         set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
         FetchContent_MakeAvailable(googletest)
     endif()
 
+    include(GoogleTest)
+
+    # Smoke Test
     add_executable(aurora_cpp_smoke_test
         tests/cpp/test_smoke.cpp
     )
@@ -102,7 +112,27 @@ if(AURORA_BUILD_TESTS)
             aurora::core
             GTest::gtest_main
     )
-
-    include(GoogleTest)
     gtest_discover_tests(aurora_cpp_smoke_test)
+
+    # Tensor Core Test
+    add_executable(aurora_cpp_tensor_test
+        tests/cpp/test_tensor.cpp
+    )
+    target_link_libraries(aurora_cpp_tensor_test
+        PRIVATE
+            aurora::core
+            GTest::gtest_main
+    )
+    gtest_discover_tests(aurora_cpp_tensor_test)
+
+    # Gradcheck Test
+    add_executable(aurora_cpp_gradcheck_test
+        tests/cpp/test_gradcheck.cpp
+    )
+    target_link_libraries(aurora_cpp_gradcheck_test
+        PRIVATE
+            aurora::core
+            GTest::gtest_main
+    )
+    gtest_discover_tests(aurora_cpp_gradcheck_test)
 endif()

@@ -4,6 +4,19 @@ A research-grade platform for uncertainty-aware model-based reinforcement learni
 """
 
 from aurora.core import AuroraInfo, get_system_info
+from aurora.gradcheck import gradcheck
+from aurora.tensor import Tensor, arange, ones, randn, tensor, zeros
 from aurora.version import __version__
 
-__all__ = ["AuroraInfo", "__version__", "get_system_info"]
+__all__ = [
+    "AuroraInfo",
+    "Tensor",
+    "__version__",
+    "arange",
+    "get_system_info",
+    "gradcheck",
+    "ones",
+    "randn",
+    "tensor",
+    "zeros",
+]
