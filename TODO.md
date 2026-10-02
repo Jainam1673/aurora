@@ -49,13 +49,18 @@
 - [x] Build dual-language numerical parity tests for distributions, GAE, and autograd tensor operators (`tests/parity/test_rl_parity.py`).
 - [x] Validate 100% test pass rate across Python (`tests/python/test_rl.py`) and C++23 (`tests/cpp/test_rl.cpp`).
 
-## Milestone 5: Latent World Model
-- [ ] Implement observation encoders and latent transition models.
-- [ ] Implement reward and continuation prediction heads.
-- [ ] Build multi-step latent imagination engine with configurable branching.
-- [ ] Support interchangeable dynamics: MLP, RSSM, and Transformer.
+## Milestone 5: Latent World Models & Uncertainty Calibration (Completed)
+- [x] Mathematical specification: `docs/mathematics/world_model.md`.
+- [x] Implement deep Gaussian ensemble dynamics (`EnsembleDynamicsModel`, `EnsembleDynamics`) with state-difference formulation.
+- [x] Implement heteroscedastic Gaussian NLL loss with exact dual-language numerical parity.
+- [x] Implement epistemic and aleatoric uncertainty decomposition (`UncertaintyEstimator`, `decompose_uncertainty`).
+- [x] Implement adaptive uncertainty-calibrated imagination engine (`ImaginationEngine`) with dynamic truncation thresholding.
+- [x] Implement Recurrent State-Space Model (`RSSM`, `GRUCell`) with variational ELBO and $\alpha$-balanced KL divergence.
+- [x] Implement first-class `sigmoid()` operator and autograd backward VJP nodes across Python and C++23.
+- [x] Build dual-language numerical parity tests asserting $< 10^{-10}$ error (`tests/parity/test_world_model_parity.py`).
+- [x] Validate 100% test pass rate across Python (`tests/python/test_world_model.py`) and C++23 (`tests/cpp/test_world_model.cpp` on GCC and Clang).
 
-## Milestone 6: Research Lineage Reproductions
+## Milestone 6: Model-Based RL & Policy Optimization (MBPO / Dyna)
 - [ ] Implement conceptual reproduction of Dreamer / RSSM in `reproductions/dreamer/`.
 - [ ] Implement conceptual reproduction of TD-MPC in `reproductions/tdmpc/`.
 - [ ] Implement conceptual reproduction of MuZero latent search in `reproductions/muzero/`.

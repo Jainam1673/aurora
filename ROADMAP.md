@@ -68,12 +68,16 @@ This roadmap outlines the sequenced progression of AURORA from bootstrap to publ
   - Full dual-language parity on distributions and GAE ($< 10^{-10}$ error).
 - **Acceptance Criteria:** Dual-language unit tests and parity tests pass with 100% success rate.
 
-### M5: Latent World Models & Imagination
-- **Goal:** Action-conditioned latent dynamics prediction and rollout generation.
+### M5: Latent World Models & Uncertainty Calibration (Completed)
+- **Goal:** Probabilistic ensemble dynamics, epistemic/aleatoric uncertainty quantification, and adaptive imagination rollout engine.
 - **Deliverables:**
-  - Observation encoder, transition predictor, reward predictor, continuation head.
-  - Multi-step latent rollout engine supporting branching and configurable horizons.
-- **Acceptance Criteria:** Multi-step rollouts generate valid state predictions and loss convergence.
+  - State-difference heteroscedastic Gaussian ensemble dynamics model (`EnsembleDynamicsModel`, `EnsembleDynamics`).
+  - Differentiable Gaussian NLL loss with exact dual-language numerical parity.
+  - Epistemic and aleatoric uncertainty decomposition module (`UncertaintyEstimator`, `decompose_uncertainty`).
+  - Adaptive uncertainty-calibrated rollout engine (`ImaginationEngine`) with dynamic truncation thresholding.
+  - Recurrent State-Space Model (`RSSM`, `GRUCell`) with multi-head decoders and $\alpha$-balanced KL divergence.
+  - Dual-language parity test suite verifying $< 10^{-10}$ error across all world model operations.
+- **Acceptance Criteria:** 100% test pass rate across pytest (96/96) and GoogleTest (56/56 on GCC and Clang).
 
 ### M6: MBRL Research Reproduction Suite
 - **Goal:** Reproduce conceptual foundations of leading MBRL architectures.

@@ -84,6 +84,7 @@ public:
     [[nodiscard]] std::shared_ptr<Tensor> gelu() const;
     [[nodiscard]] std::shared_ptr<Tensor> silu() const;
     [[nodiscard]] std::shared_ptr<Tensor> tanh() const;
+    [[nodiscard]] std::shared_ptr<Tensor> sigmoid() const;
     [[nodiscard]] std::shared_ptr<Tensor> clamp(double min_val, double max_val) const;
     [[nodiscard]] std::shared_ptr<Tensor> softmax(int axis = -1) const;
     [[nodiscard]] std::shared_ptr<Tensor> log_softmax(int axis = -1) const;

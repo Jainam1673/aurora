@@ -203,6 +203,16 @@ private:
     std::shared_ptr<Tensor> out_;
 };
 
+class SigmoidNode : public Node {
+public:
+    SigmoidNode(std::shared_ptr<Tensor> input, std::shared_ptr<Tensor> out)
+        : Node({std::move(input)}), out_(std::move(out)) {}
+    std::vector<std::shared_ptr<Tensor>> backward(const std::shared_ptr<Tensor>& grad_output) override;
+
+private:
+    std::shared_ptr<Tensor> out_;
+};
+
 class ClampNode : public Node {
 public:
     ClampNode(std::shared_ptr<Tensor> input, double min_val, double max_val)

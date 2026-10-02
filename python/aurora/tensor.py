@@ -24,7 +24,9 @@ from aurora.autograd import (
     MulBackward,
     ReLUBackward,
     ReshapeBackward,
+    SigmoidBackward,
     SiLUBackward,
+    SliceBackward,
     SoftmaxBackward,
     SqrtBackward,
     SubBackward,
@@ -108,6 +110,13 @@ class Tensor:
     def __repr__(self) -> str:
         grad_str = f", requires_grad={self.requires_grad}" if self.requires_grad else ""
         return f"aurora.Tensor({self._data}{grad_str})"
+
+    def __getitem__(self, key: Any) -> Tensor:
+        out_data = self._data[key]
+        out = Tensor(out_data, requires_grad=self.requires_grad, dtype=self.dtype)
+        if self.requires_grad:
+            out.creator = SliceBackward(self, key)
+        return out
 
     # --- Factory Helpers ---
     @staticmethod
@@ -289,6 +298,13 @@ class Tensor:
         out = Tensor(out_data, requires_grad=self.requires_grad, dtype=self.dtype)
         if self.requires_grad:
             out.creator = TanhBackward(self, out_data)
+        return out
+
+    def sigmoid(self) -> Tensor:
+        out_data = 1.0 / (1.0 + np.exp(-self._data))
+        out = Tensor(out_data, requires_grad=self.requires_grad, dtype=self.dtype)
+        if self.requires_grad:
+            out.creator = SigmoidBackward(self, out_data)
         return out
 
     def clamp(self, min_val: float | None = None, max_val: float | None = None) -> Tensor:

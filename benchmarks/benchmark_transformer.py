@@ -5,8 +5,7 @@ from __future__ import annotations
 import time
 
 import numpy as np
-
-from aurora.nn.attention import MultiHeadAttention, scaled_dot_product_attention
+from aurora.nn.attention import scaled_dot_product_attention
 from aurora.nn.transformer import TransformerBlock, TransformerDecoder
 from aurora.tensor import tensor
 
@@ -116,7 +115,8 @@ def benchmark_transformer_decoder_generation() -> None:
 
     elapsed = t1 - t0
     tok_per_sec = max_new_tokens / elapsed
-    print(f"Generated {len(tokens)} tokens in {elapsed * 1000.0:.2f} ms ({tok_per_sec:.1f} tokens/s)")
+    elapsed_ms = elapsed * 1000.0
+    print(f"Generated {len(tokens)} tokens in {elapsed_ms:.2f} ms ({tok_per_sec:.1f} tokens/s)")
 
 
 if __name__ == "__main__":

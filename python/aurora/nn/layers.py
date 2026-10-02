@@ -165,6 +165,11 @@ class Tanh(Module):
         return x.tanh()
 
 
+class Sigmoid(Module):
+    def forward(self, x: Tensor) -> Tensor:
+        return x.sigmoid()
+
+
 class Softmax(Module):
     def __init__(self, axis: int = -1) -> None:
         super().__init__()
@@ -223,6 +228,8 @@ class MLP(Module):
                     return SiLU()
                 case "tanh":
                     return Tanh()
+                case "sigmoid":
+                    return Sigmoid()
                 case _:
                     raise ValueError(f"Unknown activation: {name}")
 

@@ -639,6 +639,20 @@ std::shared_ptr<Tensor> Tensor::tanh() const {
     return result;
 }
 
+std::shared_ptr<Tensor> Tensor::sigmoid() const {
+    std::vector<double> out(numel());
+    for (size_t i = 0; i < numel(); ++i) {
+        out[i] = 1.0 / (1.0 + std::exp(-(*this)[i]));
+    }
+    auto result = std::make_shared<Tensor>(shape_, std::move(out), requires_grad_);
+    if (requires_grad_) {
+        result->set_creator(std::make_shared<SigmoidNode>(
+            std::const_pointer_cast<Tensor>(shared_from_this()), result
+        ));
+    }
+    return result;
+}
+
 std::shared_ptr<Tensor> Tensor::clamp(double min_val, double max_val) const {
     std::vector<double> out(numel());
     for (size_t i = 0; i < numel(); ++i) {

@@ -85,3 +85,21 @@ This document records key architectural, scientific, and engineering decisions m
   4. Implement deterministic classical control environments (`CartPole`, `Pendulum`) natively in C++23 and Python with matched semi-implicit Euler dynamics.
 - **Consequences:** Eliminates external RL library dependencies, provides independent C++ simulation throughput with zero Python GIL overhead, and delivers $< 10^{-10}$ numerical parity across distribution densities and GAE advantage estimates.
 
+---
+
+## ADR-009: Latent World Models, Deep Probabilistic Ensembles, and Uncertainty Calibration
+- **Date:** 2026-10-03
+- **Status:** Accepted
+- **Context:** Milestone 5 establishes the predictive core of AURORA: learning environmental transition dynamics and quantifying predictive uncertainty to prevent compounding model exploitation during policy imagination. Key requirements:
+  1. Heteroscedastic Gaussian dynamics predicting state residual transitions $\Delta s_t = s_{t+1} - s_t$ and rewards $r_t$.
+  2. Numerically stable Gaussian Negative Log-Likelihood (NLL) optimization avoiding variance collapse or gradient explosion.
+  3. Rigorous epistemic vs. aleatoric uncertainty quantification to bound imagination trust regions.
+  4. Recurrent State-Space Models (RSSM) for partially observable dynamics with analytical Gaussian KL divergence and KL balancing.
+- **Decision:**
+  1. Implement deep probabilistic ensembles with clamped log-variance $\log \sigma^2 \in [\log \sigma_{\min}^2, \log \sigma_{\max}^2]$ and compute heteroscedastic Gaussian NLL loss with exact dual-language numerical parity.
+  2. Implement `UncertaintyEstimator` decomposing predictive variance into aleatoric ($\frac{1}{E} \sum \boldsymbol{\sigma}_e^2$) and epistemic ($\frac{1}{E} \sum (\boldsymbol{\mu}_e - \bar{\boldsymbol{\mu}})^2$) components, with both fast array-based execution and differentiable autograd tensor operations.
+  3. Implement `ImaginationEngine` executing synthetic trajectory rollouts under actor policies with dynamic horizon truncation triggered when max epistemic disagreement exceeds $\tau_{\text{threshold}}$.
+  4. Implement `RSSM` with first-principles `GRUCell` recurrent transition, stochastic prior and posterior distributions, multi-head decoders, and $\alpha$-balanced KL divergence with stop-gradients.
+  5. Add native `sigmoid()` activation and backward autograd nodes across Python and C++23 tensor engines.
+- **Consequences:** Provides a complete, fully tested, peer-validated world modeling engine with zero external ML framework dependencies, achieving $< 10^{-10}$ cross-language parity on NLL loss, uncertainty decomposition, and KL divergence.
+

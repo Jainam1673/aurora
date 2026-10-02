@@ -69,6 +69,7 @@ add_library(aurora_core
     cpp/src/distribution.cpp
     cpp/src/environment.cpp
     cpp/src/buffer.cpp
+    cpp/src/world_model.cpp
 )
 add_library(aurora::core ALIAS aurora_core)
 
@@ -187,4 +188,16 @@ if(AURORA_BUILD_TESTS)
             GTest::gtest_main
     )
     gtest_discover_tests(aurora_cpp_rl_test)
+
+    # World Model & Uncertainty Test
+    add_executable(aurora_cpp_world_model_test
+        tests/cpp/test_world_model.cpp
+    )
+    target_link_libraries(aurora_cpp_world_model_test
+        PRIVATE
+            aurora::core
+            GTest::gtest_main
+    )
+    gtest_discover_tests(aurora_cpp_world_model_test)
 endif()
+

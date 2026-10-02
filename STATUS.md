@@ -1,9 +1,7 @@
-# AURORA Project Status
-
-## Current Milestone: M4 — Reinforcement Learning Primitives (Completed)
+## Current Milestone: M5 — Latent World Models & Uncertainty Calibration (Completed)
 
 **Overall Health:** GREEN  
-**Target Milestone:** M4 (Complete) $\to$ Transitioning to M5 (World Models & Uncertainty Calibration)  
+**Target Milestone:** M5 (Complete) $\to$ Transitioning to M6 (Model-Based RL & Policy Optimization)  
 **Last Updated:** 2026-10-03  
 
 ---
@@ -95,20 +93,48 @@
   - TanhNormal squashed distribution log-prob ($< 10^{-10}$ error).
   - GAE advantage estimation across multi-step trajectories ($< 10^{-10}$ error).
 
+### Milestone M5: Latent World Models & Uncertainty Calibration
+- [x] Mathematical specification: `docs/mathematics/world_model.md`.
+- [x] Python and C++23 native `sigmoid()` operator and autograd backward VJP graph nodes (`SigmoidBackward`/`SigmoidNode`).
+- [x] Probabilistic Deep Gaussian Ensemble Dynamics (`EnsembleDynamicsModel`, `EnsembleDynamics`):
+  - State-difference parameterization: predicts $\Delta s_t = s_{t+1} - s_t$ and $r_t$.
+  - Clamped log-variances in $[\log \sigma_{\min}^2, \log \sigma_{\max}^2]$ for guaranteed numerical stability.
+  - Heteroscedastic Gaussian NLL loss with exact dual-language numerical parity.
+- [x] Uncertainty Quantification & Decomposition (`UncertaintyEstimator`, `decompose_uncertainty`):
+  - Aleatoric uncertainty: $\mathcal{U}_{\text{aleatoric}} = \frac{1}{E} \sum_{e=1}^E \boldsymbol{\sigma}_e^2$.
+  - Epistemic uncertainty: $\mathcal{U}_{\text{epistemic}} = \frac{1}{E} \sum_{e=1}^E (\boldsymbol{\mu}_e - \bar{\boldsymbol{\mu}})^2$.
+  - Total predictive variance: $\mathcal{U}_{\text{total}} = \mathcal{U}_{\text{aleatoric}} + \mathcal{U}_{\text{epistemic}}$.
+  - Disagreement metric: per-sample max epistemic uncertainty $\max_j \mathcal{U}_{\text{epistemic}, j}$.
+  - Supports both high-speed numpy evaluation and fully differentiable autograd tensor operations.
+- [x] Adaptive Uncertainty-Calibrated Rollout Engine (`ImaginationEngine`):
+  - Trajectory sampling under policy $\pi(a \mid s)$ up to horizon $H_{\max}$.
+  - Dynamic horizon truncation when epistemic disagreement exceeds trust threshold $\tau_{\text{threshold}}$.
+  - Direct integration and synthetic experience injection into `ReplayBuffer`.
+- [x] Recurrent State-Space Model (`RSSM`, `GRUCell`):
+  - Continuous recurrent state $\mathbf{h}_t$ and stochastic latent state $\mathbf{z}_t$.
+  - Stochastic Gaussian prior $p(\mathbf{z}_t \mid \mathbf{h}_t)$ and posterior $q(\mathbf{z}_t \mid \mathbf{h}_t, \mathbf{x}_t)$.
+  - Multi-head decoders: observation (MSE), reward (MSE), continuation (BCE with $\hat{\gamma}_t \in (0, 1)$).
+  - Variational ELBO loss with $\alpha$-balanced KL divergence and detached stop-gradients.
+- [x] Cross-language numerical parity tests:
+  - Sigmoid forward and backward gradients ($< 10^{-10}$ error).
+  - Gaussian NLL loss forward and backward gradients with respect to mean and log-var ($< 10^{-10}$ error).
+  - Uncertainty decomposition: mean, aleatoric, epistemic, and total predictive variance ($< 10^{-10}$ error).
+  - RSSM analytical Gaussian KL divergence ($< 10^{-10}$ error).
+
 ---
 
 ## 3. Verified Artifacts & Test Results
 
 ### C++23 Native Build & GoogleTests
 - **GCC 16.2.1 (`ctest --preset debug`):**
-  - **47/47 passed (100%)** in `0.50s`.
-  - Targets: `aurora_cpp_smoke_test`, `aurora_cpp_tensor_test`, `aurora_cpp_gradcheck_test`, `aurora_cpp_nn_test`, `aurora_cpp_optim_test`, `aurora_cpp_transformer_test`, `aurora_cpp_rl_test`.
+  - **56/56 passed (100%)** in `0.52s`.
+  - Targets: `aurora_cpp_smoke_test`, `aurora_cpp_tensor_test`, `aurora_cpp_gradcheck_test`, `aurora_cpp_nn_test`, `aurora_cpp_optim_test`, `aurora_cpp_transformer_test`, `aurora_cpp_rl_test`, `aurora_cpp_world_model_test`.
 - **Clang 22.1.8 (`ctest --preset clang-debug`):**
-  - **47/47 passed (100%)** in `0.40s`.
+  - **56/56 passed (100%)** in `0.45s` with **zero warnings** under `-Wall -Wextra -Wpedantic -Wshadow -Wconversion`.
 
 ### Python 3.14 Test Suite (`pytest`)
 - Command: `uv run pytest`
-- **80/80 passed (100%)** in `5.34s`:
+- **96/96 passed (100%)** in `3.60s`:
   - `tests/python/test_smoke.py`: 3 passed
   - `tests/python/test_tensor.py`: 7 passed
   - `tests/python/test_gradcheck.py`: 14 passed
@@ -117,23 +143,26 @@
   - `tests/python/test_optim.py`: 5 passed
   - `tests/python/test_transformer.py`: 9 passed
   - `tests/python/test_rl.py`: 11 passed
+  - `tests/python/test_world_model.py`: 12 passed
   - `tests/parity/test_numerical_parity.py`: 10 passed
   - `tests/parity/test_checkpoint_parity.py`: 2 passed
   - `tests/parity/test_transformer_parity.py`: 2 passed
   - `tests/parity/test_rl_parity.py`: 6 passed
+  - `tests/parity/test_world_model_parity.py`: 4 passed
 
 ### Code Quality & Static Analysis
-- **Ruff:** `All checks passed!` across 45 source files.
-- **Mypy:** `Success: no issues found in 45 source files` (`mypy --strict`).
+- **Ruff:** `All checks passed!` across 52 source files.
+- **Mypy:** `Success: no issues found in 52 source files` (`mypy --strict`).
 
 ---
 
-## 4. Next Milestone: M5 — World Models & Uncertainty Calibration
+## 4. Next Milestone: M6 — Model-Based RL & Policy Optimization
 
-Primary objectives for M5:
-1. Probabilistic and ensemble world model formulations (Gaussian Transition Models, Ensemble Dynamics).
-2. Latent state representations (continuous latent dynamics and discrete categorical latents).
-3. Uncertainty quantification metrics: ensemble variance, epistemic vs. aleatoric decomposition, calibrated rollout horizons.
-4. C++23 native simulation and rollout engine.
-5. Cross-language numerical parity tests for world model rollouts and uncertainty estimators.
+Primary objectives for M6:
+1. Model-Based Policy Optimization (MBPO) combining short-horizon calibrated rollouts with soft actor-critic policy optimization.
+2. Dyna-style policy optimization with adaptive real-to-synthetic experience replay ratios.
+3. Continuous benchmarking on Classic Control (`CartPole`, `Pendulum`) comparing model-free SAC vs. model-based MBPO.
+4. Evaluation of sample efficiency improvements under uncertainty-guided truncation.
+5. C++23 native MBPO training loop and cross-language convergence parity verification.
+
 

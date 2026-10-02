@@ -57,4 +57,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Python unit test suite (`tests/python/test_rl.py`: 11/11 passed, 80/80 repo total).
   - C++23 GoogleTest suite (`tests/cpp/test_rl.cpp`: 7/7 passed, 47/47 repo total on GCC and Clang).
   - Cross-language numerical parity suite (`tests/parity/test_rl_parity.py`: 6/6 passed) verifying $< 10^{-10}$ error on `tanh`, `concat`, `Categorical`, `Normal`, `TanhNormal`, and GAE advantage calculations.
-  - ADR-008: Reinforcement Learning Primitives, Policy Distributions, and Dual-Language Physics Environments.
+  - **M5 Latent World Models & Uncertainty Calibration**:
+  - Mathematical specification in `docs/mathematics/world_model.md`.
+  - Python & C++23 native `sigmoid()` operator and autograd backward VJP graph nodes (`SigmoidBackward`/`SigmoidNode`).
+  - Python & C++23 deep probabilistic Gaussian ensemble dynamics (`EnsembleDynamicsModel`, `EnsembleDynamics`) with state-difference target formulation ($\Delta s_t, r_t$) and clamped log-variances.
+  - Heteroscedastic Gaussian Negative Log-Likelihood loss with exact dual-language numerical parity.
+  - Uncertainty decomposition module (`UncertaintyEstimator`, `decompose_uncertainty`) computing aleatoric uncertainty, epistemic disagreement, and total predictive variance.
+  - Adaptive uncertainty-calibrated imagination rollout engine (`ImaginationEngine`) with dynamic truncation thresholding preventing compounding model exploitation.
+  - Recurrent State-Space Model (`RSSM`, `GRUCell`) with variational ELBO and $\alpha$-balanced KL divergence with stop-gradients.
+  - Python unit test suite (`tests/python/test_world_model.py`: 12/12 passed, 96/96 repo total).
+  - C++23 GoogleTest suite (`tests/cpp/test_world_model.cpp`: 9/9 passed, 56/56 repo total on GCC and Clang).
+  - Cross-language numerical parity suite (`tests/parity/test_world_model_parity.py`: 4/4 passed, 24/24 parity total) asserting $< 10^{-10}$ error on `sigmoid`, Gaussian NLL loss, uncertainty metrics, and analytical KL divergence.
+  - ADR-009: Latent World Models, Deep Probabilistic Ensembles, and Uncertainty Calibration.

@@ -7,6 +7,7 @@
 #include "aurora/distribution.hpp"
 #include "aurora/environment.hpp"
 #include "aurora/buffer.hpp"
+#include "aurora/world_model.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -254,6 +255,22 @@ int main(int argc, char** argv) {
         }
         buf.compute_returns_and_advantages(last_v, last_d, gamma, lambda);
         out = Tensor::create({rewards.size()}, buf.advantages(), false);
+    } else if (req.op == "sigmoid") {
+        out = inps[0]->sigmoid();
+    } else if (req.op == "gaussian_nll_loss") {
+        out = world_model::gaussian_nll_loss(inps[0], inps[1], inps[2]);
+    } else if (req.op == "uncertainty_decompose") {
+        size_t half = inps.size() / 2;
+        std::vector<std::shared_ptr<Tensor>> means(inps.begin(), inps.begin() + static_cast<std::ptrdiff_t>(half));
+        std::vector<std::shared_ptr<Tensor>> vars(inps.begin() + static_cast<std::ptrdiff_t>(half), inps.end());
+        auto unc = world_model::decompose_uncertainty(means, vars);
+        int choice = req.axis.value_or(2);
+        if (choice == 0) out = unc.mean;
+        else if (choice == 1) out = unc.aleatoric;
+        else if (choice == 2) out = unc.epistemic;
+        else out = unc.total;
+    } else if (req.op == "rssm_kl_divergence") {
+        out = world_model::RSSM::kl_divergence(inps[0], inps[1], inps[2], inps[3]);
     } else {
         std::cerr << "Unknown op: " << req.op << "\n";
         return 1;

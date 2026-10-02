@@ -323,6 +323,20 @@ std::vector<std::shared_ptr<Tensor>> TanhNode::backward(const std::shared_ptr<Te
     return {grad_output->mul(dt)};
 }
 
+std::vector<std::shared_ptr<Tensor>> SigmoidNode::backward(const std::shared_ptr<Tensor>& grad_output) {
+    const auto& x = inputs_[0];
+    if (!x->requires_grad()) return {nullptr};
+
+    std::vector<double> dsig(out_->numel());
+    auto out_vec = out_->to_vector();
+    for (size_t i = 0; i < out_->numel(); ++i) {
+        double s = out_vec[i];
+        dsig[i] = s * (1.0 - s);
+    }
+    auto dt = std::make_shared<Tensor>(out_->shape(), std::move(dsig), false);
+    return {grad_output->mul(dt)};
+}
+
 std::vector<std::shared_ptr<Tensor>> ClampNode::backward(const std::shared_ptr<Tensor>& grad_output) {
     const auto& x = inputs_[0];
     if (!x->requires_grad()) return {nullptr};

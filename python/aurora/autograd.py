@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -267,6 +267,19 @@ class TanhBackward(Function):
         return (dx,)
 
 
+class SigmoidBackward(Function):
+    def __init__(self, x: Tensor, out_data: np.ndarray) -> None:
+        super().__init__(x)
+        self.out_data = out_data
+
+    def backward(self, grad_output: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        (x,) = self.inputs
+        if not x.requires_grad:
+            return (None,)
+        dx = grad_output * self.out_data * (1.0 - self.out_data)
+        return (dx,)
+
+
 class ClampBackward(Function):
     def __init__(self, x: Tensor, min_val: float | None, max_val: float | None) -> None:
         super().__init__(x)
@@ -391,3 +404,18 @@ class ConcatBackward(Function):
         return tuple(
             g if inp.requires_grad else None for inp, g in zip(self.inputs, grads, strict=True)
         )
+
+
+class SliceBackward(Function):
+    def __init__(self, x: Tensor, key: Any) -> None:
+        super().__init__(x)
+        self.key = key
+
+    def backward(self, grad_output: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        (x,) = self.inputs
+        if not x.requires_grad:
+            return (None,)
+        dx = np.zeros_like(x.data)
+        dx[self.key] = grad_output
+        return (dx,)
+
