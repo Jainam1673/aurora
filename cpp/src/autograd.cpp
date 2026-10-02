@@ -309,4 +309,73 @@ std::vector<std::shared_ptr<Tensor>> EmbeddingNode::backward(const std::shared_p
     return {grad_weight};
 }
 
+std::vector<std::shared_ptr<Tensor>> TanhNode::backward(const std::shared_ptr<Tensor>& grad_output) {
+    const auto& x = inputs_[0];
+    if (!x->requires_grad()) return {nullptr};
+
+    std::vector<double> dtanh(out_->numel());
+    auto out_vec = out_->to_vector();
+    for (size_t i = 0; i < out_->numel(); ++i) {
+        double y = out_vec[i];
+        dtanh[i] = 1.0 - y * y;
+    }
+    auto dt = std::make_shared<Tensor>(out_->shape(), std::move(dtanh), false);
+    return {grad_output->mul(dt)};
+}
+
+std::vector<std::shared_ptr<Tensor>> ClampNode::backward(const std::shared_ptr<Tensor>& grad_output) {
+    const auto& x = inputs_[0];
+    if (!x->requires_grad()) return {nullptr};
+
+    std::vector<double> dclamp(x->numel());
+    auto x_vec = x->to_vector();
+    for (size_t i = 0; i < x->numel(); ++i) {
+        double v = x_vec[i];
+        dclamp[i] = (v >= min_val_ && v <= max_val_) ? 1.0 : 0.0;
+    }
+    auto dt = std::make_shared<Tensor>(x->shape(), std::move(dclamp), false);
+    return {grad_output->mul(dt)};
+}
+
+std::vector<std::shared_ptr<Tensor>> ConcatNode::backward(const std::shared_ptr<Tensor>& grad_output) {
+    size_t uaxis = static_cast<size_t>(axis_);
+    size_t ndim_s = grad_output->ndim();
+    size_t n_outer = 1;
+    for (size_t d = 0; d < uaxis; ++d) {
+        n_outer *= grad_output->shape()[d];
+    }
+    size_t n_inner = 1;
+    for (size_t d = uaxis + 1; d < ndim_s; ++d) {
+        n_inner *= grad_output->shape()[d];
+    }
+    size_t total_axis_size = grad_output->shape()[uaxis];
+
+    std::vector<std::shared_ptr<Tensor>> grads;
+    grads.reserve(inputs_.size());
+
+    size_t offset_k = 0;
+    for (size_t k = 0; k < inputs_.size(); ++k) {
+        const auto& inp = inputs_[k];
+        size_t s_k = split_sizes_[k];
+        if (!inp->requires_grad()) {
+            grads.push_back(nullptr);
+        } else {
+            size_t inp_numel = n_outer * s_k * n_inner;
+            std::vector<double> g_data(inp_numel);
+            for (size_t o = 0; o < n_outer; ++o) {
+                for (size_t m = 0; m < s_k; ++m) {
+                    for (size_t i = 0; i < n_inner; ++i) {
+                        size_t src_idx = (o * total_axis_size + (offset_k + m)) * n_inner + i;
+                        size_t dst_idx = (o * s_k + m) * n_inner + i;
+                        g_data[dst_idx] = (*grad_output)[src_idx];
+                    }
+                }
+            }
+            grads.push_back(std::make_shared<Tensor>(inp->shape(), std::move(g_data), false));
+        }
+        offset_k += s_k;
+    }
+    return grads;
+}
+
 } // namespace aurora

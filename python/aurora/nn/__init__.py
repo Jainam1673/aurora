@@ -21,6 +21,7 @@ from aurora.nn.layers import (
     Sequential,
     SiLU,
     Softmax,
+    Tanh,
 )
 from aurora.nn.module import Module
 from aurora.nn.parameter import Parameter
@@ -47,6 +48,7 @@ __all__ = [
     "Sequential",
     "SiLU",
     "Softmax",
+    "Tanh",
     "TransformerBlock",
     "TransformerDecoder",
     "apply_rotary_pos_emb",

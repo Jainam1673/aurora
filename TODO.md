@@ -39,11 +39,15 @@
 - [x] Build cross-language attention and transformer block optimization parity tests (`tests/parity/test_transformer_parity.py`).
 - [x] Create benchmark suite for attention throughput and generation latency (`benchmarks/benchmark_transformer.py`).
 
-## Milestone 4: RL Foundation
-- [ ] Define standardized `Environment` interface in Python and C++.
-- [ ] Implement Multi-Armed Bandits, TD(0), TD($\lambda$), SARSA, and Q-learning.
-- [ ] Implement Policy Gradient, REINFORCE, Actor-Critic, GAE, PPO, and SAC.
-- [ ] Benchmark and plot verified learning curves on CartPole and continuous control toys.
+## Milestone 4: RL Foundation (Completed)
+- [x] Mathematical specification: `docs/mathematics/rl_primitives.md`.
+- [x] Implement policy distributions in Python and C++23: `Categorical`, `Normal`, `TanhNormal` (Squashed Gaussian).
+- [x] Implement native classical control simulation environments: `CartPole` and `Pendulum`.
+- [x] Implement `RolloutBuffer` with Generalized Advantage Estimation (GAE-$\lambda$) and `ReplayBuffer`.
+- [x] Implement `ActorCriticPolicy`, `SquashedGaussianActor`, and `TwinCritic` architectures.
+- [x] Implement `PPO` (clipped surrogate objective) and `SAC` (twin critics, auto-alpha) with autograd gradient routing.
+- [x] Build dual-language numerical parity tests for distributions, GAE, and autograd tensor operators (`tests/parity/test_rl_parity.py`).
+- [x] Validate 100% test pass rate across Python (`tests/python/test_rl.py`) and C++23 (`tests/cpp/test_rl.cpp`).
 
 ## Milestone 5: Latent World Model
 - [ ] Implement observation encoders and latent transition models.

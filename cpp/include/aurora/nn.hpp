@@ -167,6 +167,13 @@ public:
     }
 };
 
+class Tanh : public Module {
+public:
+    std::shared_ptr<Tensor> forward(const std::shared_ptr<Tensor>& input) override {
+        return input->tanh();
+    }
+};
+
 class Softmax : public Module {
 public:
     explicit Softmax(int axis = -1) : axis_(axis) {}

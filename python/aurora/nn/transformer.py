@@ -90,9 +90,7 @@ class TransformerBlock(Module):
         """Forward pass returning both transformed representations and attention weights."""
         # Pre-LN / RMSNorm + Self-Attention + Residual
         normed = cast(Tensor, self.norm1(x))
-        attn_out, attn_weights = self.attn(
-            normed, mask=mask, is_causal=is_causal
-        )
+        attn_out, attn_weights = self.attn(normed, mask=mask, is_causal=is_causal)
         if self.dropout1 is not None:
             attn_out = self.dropout1(attn_out)
         x = x + attn_out
@@ -219,9 +217,7 @@ class TransformerDecoder(Module):
 
         _b, t, _d = h.shape
         if t > self.max_seq_len:
-            raise ValueError(
-                f"Sequence length {t} exceeds max_seq_len {self.max_seq_len}"
-            )
+            raise ValueError(f"Sequence length {t} exceeds max_seq_len {self.max_seq_len}")
 
         # Positional encoding injection
         positions = np.arange(t, dtype=np.int64)
@@ -256,7 +252,7 @@ class TransformerDecoder(Module):
             if tokens.shape[1] <= self.max_seq_len:
                 cond_tokens = tokens
             else:
-                cond_tokens = tokens[:, -self.max_seq_len:]
+                cond_tokens = tokens[:, -self.max_seq_len :]
             logits = self.forward(cond_tokens, is_causal=True)
             # Take logits at last position: shape (1, vocab_size)
             last_logits = logits.numpy()[:, -1, :]
@@ -272,4 +268,3 @@ class TransformerDecoder(Module):
             tokens = np.concatenate([tokens, np.array([[next_token]], dtype=np.int64)], axis=1)
 
         return np.asarray(tokens[0])
-

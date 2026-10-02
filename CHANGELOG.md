@@ -46,3 +46,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - C++23 GoogleTest suite (`tests/cpp/test_transformer.cpp`: 8/8 passed, 40/40 repo total on GCC and Clang).
   - Cross-language numerical parity suite (`tests/parity/test_transformer_parity.py`) verifying $< 10^{-10}$ error on attention forward/backward and multi-parameter transformer block optimization.
   - Benchmark suite (`benchmarks/benchmark_transformer.py`).
+- **M4 Reinforcement Learning Primitives**:
+  - Mathematical specification in `docs/mathematics/rl_primitives.md`.
+  - Python & C++23 native tensor operators: `tanh()`, `clamp()`, and N-dimensional `concat()` with reverse-mode autograd VJP graph nodes (`TanhBackward`/`TanhNode`, `ClampBackward`/`ClampNode`, `ConcatBackward`/`ConcatNode`).
+  - Python & C++23 policy distributions: `Categorical`, `Normal`, and `TanhNormal` (Squashed Gaussian with stable softplus change-of-variables log determinant).
+  - Native simulation environments in Python and C++23: `CartPole` and `Pendulum` with semi-implicit Euler dynamics.
+  - Trajectory storage and buffers: `RolloutBuffer` with Generalized Advantage Estimation (GAE-$\lambda$) and `ReplayBuffer` circular experience replay with uniform sampling.
+  - Deep RL policy architectures: `ActorCriticPolicy`, `SquashedGaussianActor`, `TwinCritic`.
+  - Model-free RL algorithms: `PPO` (clipped surrogate loss, value loss, entropy bonus) and `SAC` (twin Q-critics, reparameterized policy improvement, automatic entropy temperature $\alpha$).
+  - Python unit test suite (`tests/python/test_rl.py`: 11/11 passed, 80/80 repo total).
+  - C++23 GoogleTest suite (`tests/cpp/test_rl.cpp`: 7/7 passed, 47/47 repo total on GCC and Clang).
+  - Cross-language numerical parity suite (`tests/parity/test_rl_parity.py`: 6/6 passed) verifying $< 10^{-10}$ error on `tanh`, `concat`, `Categorical`, `Normal`, `TanhNormal`, and GAE advantage calculations.
+  - ADR-008: Reinforcement Learning Primitives, Policy Distributions, and Dual-Language Physics Environments.

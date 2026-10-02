@@ -193,4 +193,36 @@ private:
     std::vector<size_t> indices_shape_;
 };
 
+class TanhNode : public Node {
+public:
+    TanhNode(std::shared_ptr<Tensor> input, std::shared_ptr<Tensor> out)
+        : Node({std::move(input)}), out_(std::move(out)) {}
+    std::vector<std::shared_ptr<Tensor>> backward(const std::shared_ptr<Tensor>& grad_output) override;
+
+private:
+    std::shared_ptr<Tensor> out_;
+};
+
+class ClampNode : public Node {
+public:
+    ClampNode(std::shared_ptr<Tensor> input, double min_val, double max_val)
+        : Node({std::move(input)}), min_val_(min_val), max_val_(max_val) {}
+    std::vector<std::shared_ptr<Tensor>> backward(const std::shared_ptr<Tensor>& grad_output) override;
+
+private:
+    double min_val_;
+    double max_val_;
+};
+
+class ConcatNode : public Node {
+public:
+    ConcatNode(std::vector<std::shared_ptr<Tensor>> inputs, int axis, std::vector<size_t> split_sizes)
+        : Node(std::move(inputs)), axis_(axis), split_sizes_(std::move(split_sizes)) {}
+    std::vector<std::shared_ptr<Tensor>> backward(const std::shared_ptr<Tensor>& grad_output) override;
+
+private:
+    int axis_;
+    std::vector<size_t> split_sizes_;
+};
+
 } // namespace aurora

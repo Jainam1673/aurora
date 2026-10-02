@@ -1,9 +1,9 @@
 # AURORA Project Status
 
-## Current Milestone: M3 — Transformer Engine & Attention (Completed)
+## Current Milestone: M4 — Reinforcement Learning Primitives (Completed)
 
 **Overall Health:** GREEN  
-**Target Milestone:** M3 (Complete) $\to$ Transitioning to M4 (World Models & Uncertainty Calibration)  
+**Target Milestone:** M4 (Complete) $\to$ Transitioning to M5 (World Models & Uncertainty Calibration)  
 **Last Updated:** 2026-10-03  
 
 ---
@@ -70,11 +70,30 @@
 - [x] Autoregressive `TransformerDecoder` supporting discrete token embeddings or continuous state projections, learned positional embeddings, stacked transformer blocks, final normalization, output projection head, and greedy/temperature autoregressive token generation.
 - [x] C++23 native peer implementations: `cpp/include/aurora/attention.hpp`, `cpp/src/attention.cpp`, `cpp/include/aurora/transformer.hpp`, `cpp/src/transformer.cpp`.
 - [x] Zero compiler warnings across both GCC 16.2.1 and Clang 22.1.8.
-- [x] Python test suite: 9/9 tests passed in `tests/python/test_transformer.py` (total 63 tests in repo, 100% pass).
-- [x] C++23 test suite: 8/8 tests passed in `tests/cpp/test_transformer.cpp` (total 40 tests in repo, 100% pass).
-- [x] Bidirectional cross-language parity:
-  - Scaled Dot-Product Attention forward and autograd VJP parity $< 10^{-10}$ error.
-  - Multi-parameter Transformer Block forward, backward, and AdamW optimization step parity $< 10^{-10}$ error on parameters and momentum buffers.
+
+### Milestone M4: Reinforcement Learning Primitives
+- [x] Mathematical specification: `docs/mathematics/rl_primitives.md`.
+- [x] Python and C++23 native tensor operators: `tanh()`, `clamp()`, and N-dimensional `concat()` with reverse-mode autograd VJP graph nodes (`TanhBackward`/`TanhNode`, `ClampBackward`/`ClampNode`, `ConcatBackward`/`ConcatNode`).
+- [x] Python and C++23 policy distributions:
+  - `Categorical`: logits, probabilities, sampling, log-likelihood, and Shannon entropy.
+  - `Normal`: spherical/diagonal Gaussian, reparameterization trick (`rsample`), log-density, differential entropy.
+  - `TanhNormal`: squashed Gaussian bijector with numerically stable softplus identity: $\log(1 - \tanh^2(u)) = 2(\log 2 - u - \text{softplus}(-2u))$.
+- [x] Native simulation environments with semi-implicit Euler dynamics:
+  - `CartPole`: 4D continuous state, discrete actions $\{0, 1\}$.
+  - `Pendulum`: 3D continuous state $[\cos\theta, \sin\theta, \dot\theta]$, continuous torque action in $[-2.0, 2.0]$.
+- [x] Trajectory storage and experience replay buffers:
+  - `RolloutBuffer`: Generalized Advantage Estimation (GAE-$\lambda$) with configurable bootstrapping, advantage normalization, and minibatch generation.
+  - `ReplayBuffer`: FIFO circular experience replay buffer with uniform minibatch sampling.
+- [x] Deep RL algorithms (from first principles, zero external dependencies):
+  - `PPO`: Clipped surrogate policy objective with differentiable gradient routing, value baseline clipping, entropy exploration bonus.
+  - `SAC`: Twin Q-critic networks, reparameterized policy gradient maximization, automatic entropy temperature $\alpha$ adjustment, and Polyak soft target averaging.
+- [x] Cross-language numerical parity tests:
+  - Tanh forward and backward gradients ($< 10^{-10}$ error).
+  - Concat forward and backward gradients across multiple inputs ($< 10^{-10}$ error).
+  - Categorical distribution log-prob and entropy ($< 10^{-10}$ error).
+  - Normal distribution log-prob and entropy ($< 10^{-10}$ error).
+  - TanhNormal squashed distribution log-prob ($< 10^{-10}$ error).
+  - GAE advantage estimation across multi-step trajectories ($< 10^{-10}$ error).
 
 ---
 
@@ -82,14 +101,14 @@
 
 ### C++23 Native Build & GoogleTests
 - **GCC 16.2.1 (`ctest --preset debug`):**
-  - **40/40 passed (100%)** in `0.32s`.
-  - Targets: `aurora_cpp_smoke_test`, `aurora_cpp_tensor_test`, `aurora_cpp_gradcheck_test`, `aurora_cpp_nn_test`, `aurora_cpp_optim_test`, `aurora_cpp_transformer_test`.
+  - **47/47 passed (100%)** in `0.50s`.
+  - Targets: `aurora_cpp_smoke_test`, `aurora_cpp_tensor_test`, `aurora_cpp_gradcheck_test`, `aurora_cpp_nn_test`, `aurora_cpp_optim_test`, `aurora_cpp_transformer_test`, `aurora_cpp_rl_test`.
 - **Clang 22.1.8 (`ctest --preset clang-debug`):**
-  - **40/40 passed (100%)** in `0.33s`.
+  - **47/47 passed (100%)** in `0.40s`.
 
 ### Python 3.14 Test Suite (`pytest`)
-- Command: `uv run pytest -v`
-- **63/63 passed (100%)** in `4.99s`:
+- Command: `uv run pytest`
+- **80/80 passed (100%)** in `5.34s`:
   - `tests/python/test_smoke.py`: 3 passed
   - `tests/python/test_tensor.py`: 7 passed
   - `tests/python/test_gradcheck.py`: 14 passed
@@ -97,26 +116,24 @@
   - `tests/python/test_nn.py`: 8 passed
   - `tests/python/test_optim.py`: 5 passed
   - `tests/python/test_transformer.py`: 9 passed
+  - `tests/python/test_rl.py`: 11 passed
   - `tests/parity/test_numerical_parity.py`: 10 passed
   - `tests/parity/test_checkpoint_parity.py`: 2 passed
   - `tests/parity/test_transformer_parity.py`: 2 passed
-
-### Cross-Language Parity Benchmarks
-- All tensor operations pass at error tolerance $< 10^{-10}$.
-- Attention forward and backward: exact match at $< 10^{-10}$ error.
-- TransformerBlock + AdamW step: exact weight, bias, `exp_avg`, and `exp_avg_sq` match across Python and C++ at $< 10^{-10}$ error.
+  - `tests/parity/test_rl_parity.py`: 6 passed
 
 ### Code Quality & Static Analysis
-- **Ruff:** `All checks passed! 29 source files checked.`
-- **Mypy:** `Success: no issues found in 29 source files` (strict typechecking enabled).
+- **Ruff:** `All checks passed!` across 45 source files.
+- **Mypy:** `Success: no issues found in 45 source files` (`mypy --strict`).
 
 ---
 
-## 4. Next Milestone: M4 — World Models & Uncertainty Calibration
+## 4. Next Milestone: M5 — World Models & Uncertainty Calibration
 
-Primary objectives for M4:
-1. Probabilistic and ensemble world model formulations.
-2. Latent transition dynamics (continuous and discrete representations).
+Primary objectives for M5:
+1. Probabilistic and ensemble world model formulations (Gaussian Transition Models, Ensemble Dynamics).
+2. Latent state representations (continuous latent dynamics and discrete categorical latents).
 3. Uncertainty quantification metrics: ensemble variance, epistemic vs. aleatoric decomposition, calibrated rollout horizons.
 4. C++23 native simulation and rollout engine.
 5. Cross-language numerical parity tests for world model rollouts and uncertainty estimators.
+

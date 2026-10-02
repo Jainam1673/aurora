@@ -68,3 +68,20 @@ This document records key architectural, scientific, and engineering decisions m
   3. Ensure autograd topological tape execution correctly handles non-contiguous strided views via automatic contiguous reconciliation during matmul and reductions.
   4. Enforce strict submodule registration order matching dataflow order (`norm1`, `attn`, `norm2`, `linear1`, `linear2`) to ensure identical checkpoint serialization and optimization parity.
 - **Consequences:** Guaranteed $< 10^{-10}$ mathematical parity across Python and C++ for both non-causal and causal Multi-Head Attention, stable multi-layer autoregressive rollouts, and seamless serialization.
+
+---
+
+## ADR-008: Reinforcement Learning Primitives, Policy Distributions, and Dual-Language Physics Environments
+- **Date:** 2026-10-03
+- **Status:** Accepted
+- **Context:** Milestone 4 requires foundational reinforcement learning primitives: action distributions for discrete and continuous control, experience buffers (GAE rollout buffer and off-policy replay buffer), native physics simulation environments (CartPole and Pendulum), and reference algorithms (PPO and SAC). Key challenges include:
+  1. Differentiable routing of min/max operators in clipped surrogate objectives (PPO) and double Q-learning (SAC) without breaking autograd graph connectivity.
+  2. Numerical stability in change-of-variables log-determinant for Squashed Gaussians ($\text{TanhNormal}$) as actions approach boundaries $\pm 1$.
+  3. Ensuring exact numerical equivalence between Python and C++ native physics simulation environments.
+- **Decision:**
+  1. Implement `TanhNormal` utilizing the softplus identity $\log(1 - \tanh^2(u)) = 2(\log 2 - u - \text{softplus}(-2u))$ to eliminate catastrophic numerical cancellation.
+  2. Implement `tanh()`, `clamp()`, and N-dimensional `concat()` with explicit backward VJP graph nodes in both Python and C++23 native autograd engines.
+  3. Route clipped surrogate losses and minimum twin critic evaluations through differentiable boolean masks to maintain uninterrupted pathwise gradient propagation.
+  4. Implement deterministic classical control environments (`CartPole`, `Pendulum`) natively in C++23 and Python with matched semi-implicit Euler dynamics.
+- **Consequences:** Eliminates external RL library dependencies, provides independent C++ simulation throughput with zero Python GIL overhead, and delivers $< 10^{-10}$ numerical parity across distribution densities and GAE advantage estimates.
+

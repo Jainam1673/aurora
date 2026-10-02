@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -253,6 +254,38 @@ class SiLUBackward(Function):
         return (grad_output * grad_x,)
 
 
+class TanhBackward(Function):
+    def __init__(self, x: Tensor, out_data: np.ndarray) -> None:
+        super().__init__(x)
+        self.out_data = out_data
+
+    def backward(self, grad_output: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        (x,) = self.inputs
+        if not x.requires_grad:
+            return (None,)
+        dx = grad_output * (1.0 - self.out_data**2)
+        return (dx,)
+
+
+class ClampBackward(Function):
+    def __init__(self, x: Tensor, min_val: float | None, max_val: float | None) -> None:
+        super().__init__(x)
+        self.min_val = min_val
+        self.max_val = max_val
+
+    def backward(self, grad_output: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        (x,) = self.inputs
+        if not x.requires_grad:
+            return (None,)
+        mask = np.ones_like(x.data, dtype=bool)
+        if self.min_val is not None:
+            mask &= x.data >= self.min_val
+        if self.max_val is not None:
+            mask &= x.data <= self.max_val
+        dx = np.where(mask, grad_output, 0.0)
+        return (dx,)
+
+
 class SoftmaxBackward(Function):
     def __init__(self, x: Tensor, out_data: np.ndarray, axis: int) -> None:
         super().__init__(x)
@@ -345,3 +378,16 @@ class LayerNormBackward(Function):
         if self.has_beta:
             grads.append(gbeta)
         return tuple(grads)
+
+
+class ConcatBackward(Function):
+    def __init__(self, tensors: Sequence[Tensor], axis: int, split_indices: list[int]) -> None:
+        super().__init__(*tensors)
+        self.axis = axis
+        self.split_indices = split_indices
+
+    def backward(self, grad_output: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        grads = np.split(grad_output, self.split_indices, axis=self.axis)
+        return tuple(
+            g if inp.requires_grad else None for inp, g in zip(self.inputs, grads, strict=True)
+        )

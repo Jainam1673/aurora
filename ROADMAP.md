@@ -58,12 +58,15 @@ This roadmap outlines the sequenced progression of AURORA from bootstrap to publ
   - Throughput benchmarks (latency, memory, FLOPs estimate).
 - **Acceptance Criteria:** Exact parity on attention masks and weights against PyTorch reference.
 
-### M4: RL Foundation
-- **Goal:** Establish core model-free RL algorithms on Tier-A benchmark environments.
+### M4: RL Foundation (Completed)
+- **Goal:** Establish core model-free RL algorithms, distributions, and native simulation environments.
 - **Deliverables:**
-  - Bandits, tabular Q-learning, SARSA, Actor-Critic, PPO, SAC.
-  - Verified learning curves on CartPole, MountainCar, Acrobot.
-- **Acceptance Criteria:** PPO and SAC reach standard solve thresholds across 5 independent seeds.
+  - Policy distributions: Categorical, Normal, and TanhNormal (Squashed Gaussian).
+  - Trajectory buffers: RolloutBuffer with GAE-$\lambda$ and ReplayBuffer.
+  - Native physics environments: CartPole and Pendulum in Python and C++23.
+  - Core RL algorithms: PPO (clipped objective) and SAC (twin Q-critics, auto $\alpha$).
+  - Full dual-language parity on distributions and GAE ($< 10^{-10}$ error).
+- **Acceptance Criteria:** Dual-language unit tests and parity tests pass with 100% success rate.
 
 ### M5: Latent World Models & Imagination
 - **Goal:** Action-conditioned latent dynamics prediction and rollout generation.

@@ -298,6 +298,7 @@ MLP::MLP(size_t in_features,
         if (act == "relu") return std::make_shared<ReLU>();
         if (act == "gelu") return std::make_shared<GELU>();
         if (act == "silu") return std::make_shared<SiLU>();
+        if (act == "tanh") return std::make_shared<Tanh>();
         throw std::invalid_argument(std::format("Unknown activation '{}'", act));
     };
 

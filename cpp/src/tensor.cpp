@@ -625,6 +625,34 @@ std::shared_ptr<Tensor> Tensor::silu() const {
     return result;
 }
 
+std::shared_ptr<Tensor> Tensor::tanh() const {
+    std::vector<double> out(numel());
+    for (size_t i = 0; i < numel(); ++i) {
+        out[i] = std::tanh((*this)[i]);
+    }
+    auto result = std::make_shared<Tensor>(shape_, std::move(out), requires_grad_);
+    if (requires_grad_) {
+        result->set_creator(std::make_shared<TanhNode>(
+            std::const_pointer_cast<Tensor>(shared_from_this()), result
+        ));
+    }
+    return result;
+}
+
+std::shared_ptr<Tensor> Tensor::clamp(double min_val, double max_val) const {
+    std::vector<double> out(numel());
+    for (size_t i = 0; i < numel(); ++i) {
+        out[i] = std::clamp((*this)[i], min_val, max_val);
+    }
+    auto result = std::make_shared<Tensor>(shape_, std::move(out), requires_grad_);
+    if (requires_grad_) {
+        result->set_creator(std::make_shared<ClampNode>(
+            std::const_pointer_cast<Tensor>(shared_from_this()), min_val, max_val
+        ));
+    }
+    return result;
+}
+
 std::shared_ptr<Tensor> Tensor::softmax(int axis) const {
     int ax = (axis < 0) ? axis + static_cast<int>(ndim()) : axis;
     size_t uax = static_cast<size_t>(ax);
@@ -883,6 +911,80 @@ std::shared_ptr<Tensor> Tensor::randn(std::vector<size_t> shape, uint64_t seed, 
         data[i] = dist(rng);
     }
     return std::make_shared<Tensor>(std::move(shape), std::move(data), requires_grad);
+}
+
+std::shared_ptr<Tensor> Tensor::concat(const std::vector<std::shared_ptr<Tensor>>& tensors, int axis) {
+    if (tensors.empty()) {
+        throw std::invalid_argument("concat requires at least one tensor");
+    }
+    if (tensors.size() == 1) {
+        return tensors[0];
+    }
+    int ndim_int = static_cast<int>(tensors[0]->ndim());
+    int norm_axis = (axis < 0) ? (axis + ndim_int) : axis;
+    if (norm_axis < 0 || norm_axis >= ndim_int) {
+        throw std::invalid_argument(std::format("concat axis {} out of bounds for ndim {}", axis, ndim_int));
+    }
+    size_t uaxis = static_cast<size_t>(norm_axis);
+
+    const auto& base_shape = tensors[0]->shape();
+    size_t total_axis_size = 0;
+    bool any_req_grad = false;
+    std::vector<size_t> split_sizes;
+    split_sizes.reserve(tensors.size());
+
+    for (const auto& t : tensors) {
+        if (static_cast<int>(t->ndim()) != ndim_int) {
+            throw std::invalid_argument("All tensors must have the same number of dimensions for concat");
+        }
+        for (size_t d = 0; d < static_cast<size_t>(ndim_int); ++d) {
+            if (d != uaxis && t->shape()[d] != base_shape[d]) {
+                throw std::invalid_argument("Tensor dimensions must match except along concat axis");
+            }
+        }
+        split_sizes.push_back(t->shape()[uaxis]);
+        total_axis_size += t->shape()[uaxis];
+        if (t->requires_grad()) {
+            any_req_grad = true;
+        }
+    }
+
+    std::vector<size_t> out_shape = base_shape;
+    out_shape[uaxis] = total_axis_size;
+
+    size_t n_outer = 1;
+    for (size_t d = 0; d < uaxis; ++d) {
+        n_outer *= base_shape[d];
+    }
+    size_t n_inner = 1;
+    for (size_t d = uaxis + 1; d < static_cast<size_t>(ndim_int); ++d) {
+        n_inner *= base_shape[d];
+    }
+
+    size_t total_numel = n_outer * total_axis_size * n_inner;
+    std::vector<double> out_data(total_numel);
+
+    size_t offset_k = 0;
+    for (size_t k = 0; k < tensors.size(); ++k) {
+        const auto& t = tensors[k];
+        size_t s_k = split_sizes[k];
+        for (size_t o = 0; o < n_outer; ++o) {
+            for (size_t m = 0; m < s_k; ++m) {
+                for (size_t i = 0; i < n_inner; ++i) {
+                    size_t src_idx = (o * s_k + m) * n_inner + i;
+                    size_t dst_idx = (o * total_axis_size + (offset_k + m)) * n_inner + i;
+                    out_data[dst_idx] = (*t)[src_idx];
+                }
+            }
+        }
+        offset_k += s_k;
+    }
+
+    auto result = std::make_shared<Tensor>(out_shape, std::move(out_data), any_req_grad);
+    if (any_req_grad) {
+        result->set_creator(std::make_shared<ConcatNode>(tensors, norm_axis, std::move(split_sizes)));
+    }
+    return result;
 }
 
 // Operators

@@ -160,6 +160,11 @@ class SiLU(Module):
         return x.silu()
 
 
+class Tanh(Module):
+    def forward(self, x: Tensor) -> Tensor:
+        return x.tanh()
+
+
 class Softmax(Module):
     def __init__(self, axis: int = -1) -> None:
         super().__init__()
@@ -216,6 +221,8 @@ class MLP(Module):
                     return GELU()
                 case "silu":
                     return SiLU()
+                case "tanh":
+                    return Tanh()
                 case _:
                     raise ValueError(f"Unknown activation: {name}")
 
@@ -275,4 +282,3 @@ class ModuleList(Module):
 
     def __getitem__(self, idx: int) -> Module:
         return self._module_list[idx]
-

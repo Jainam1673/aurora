@@ -4,6 +4,9 @@
 #include "aurora/checkpoint.hpp"
 #include "aurora/attention.hpp"
 #include "aurora/transformer.hpp"
+#include "aurora/distribution.hpp"
+#include "aurora/environment.hpp"
+#include "aurora/buffer.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -215,6 +218,42 @@ int main(int argc, char** argv) {
         std::shared_ptr<Tensor> mask = (inps.size() > 3) ? inps[3] : nullptr;
         auto attn_res = scaled_dot_product_attention(q, k, v, mask);
         out = attn_res.output;
+    } else if (req.op == "tanh") {
+        out = inps[0]->tanh();
+    } else if (req.op == "clamp") {
+        out = inps[0]->clamp(-1.0, 1.0);
+    } else if (req.op == "concat") {
+        out = Tensor::concat(inps, req.axis.value_or(0));
+    } else if (req.op == "categorical_log_prob") {
+        Categorical dist(inps[0]);
+        out = dist.log_prob(inps[1]);
+    } else if (req.op == "categorical_entropy") {
+        Categorical dist(inps[0]);
+        out = dist.entropy();
+    } else if (req.op == "normal_log_prob") {
+        Normal dist(inps[0], inps[1]);
+        out = dist.log_prob(inps[2]);
+    } else if (req.op == "normal_entropy") {
+        Normal dist(inps[0], inps[1]);
+        out = dist.entropy();
+    } else if (req.op == "tanh_normal_log_prob") {
+        TanhNormal dist(inps[0], inps[1]);
+        out = dist.log_prob(inps[2]);
+    } else if (req.op == "gae") {
+        auto rewards = inps[0]->to_vector();
+        auto values = inps[1]->to_vector();
+        auto dones = inps[2]->to_vector();
+        double last_v = inps[3]->item();
+        bool last_d = inps[4]->item() > 0.5;
+        double gamma = (inps.size() > 5) ? inps[5]->item() : 0.99;
+        double lambda = (inps.size() > 6) ? inps[6]->item() : 0.95;
+
+        RolloutBuffer buf(rewards.size(), {1}, {1}, 1);
+        for (size_t t = 0; t < rewards.size(); ++t) {
+            buf.add({0.0}, {0.0}, rewards[t], dones[t] > 0.5, values[t], 0.0);
+        }
+        buf.compute_returns_and_advantages(last_v, last_d, gamma, lambda);
+        out = Tensor::create({rewards.size()}, buf.advantages(), false);
     } else {
         std::cerr << "Unknown op: " << req.op << "\n";
         return 1;

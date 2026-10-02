@@ -83,6 +83,8 @@ public:
     [[nodiscard]] std::shared_ptr<Tensor> relu() const;
     [[nodiscard]] std::shared_ptr<Tensor> gelu() const;
     [[nodiscard]] std::shared_ptr<Tensor> silu() const;
+    [[nodiscard]] std::shared_ptr<Tensor> tanh() const;
+    [[nodiscard]] std::shared_ptr<Tensor> clamp(double min_val, double max_val) const;
     [[nodiscard]] std::shared_ptr<Tensor> softmax(int axis = -1) const;
     [[nodiscard]] std::shared_ptr<Tensor> log_softmax(int axis = -1) const;
     [[nodiscard]] std::shared_ptr<Tensor> layer_norm(
@@ -91,12 +93,13 @@ public:
         double eps = 1e-5,
         int axis = -1) const;
 
-    // Static Factories
+    // Static Factories and Combiners
     static std::shared_ptr<Tensor> create(std::vector<size_t> shape, double init_val = 0.0, bool requires_grad = false);
     static std::shared_ptr<Tensor> create(std::vector<size_t> shape, std::vector<double> data, bool requires_grad = false);
     static std::shared_ptr<Tensor> zeros(std::vector<size_t> shape, bool requires_grad = false);
     static std::shared_ptr<Tensor> ones(std::vector<size_t> shape, bool requires_grad = false);
     static std::shared_ptr<Tensor> randn(std::vector<size_t> shape, uint64_t seed = 42, bool requires_grad = false);
+    static std::shared_ptr<Tensor> concat(const std::vector<std::shared_ptr<Tensor>>& tensors, int axis = 0);
 
 private:
     std::vector<size_t> shape_;

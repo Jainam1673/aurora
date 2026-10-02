@@ -10,6 +10,8 @@ import numpy as np
 
 from aurora.autograd import (
     AddBackward,
+    ClampBackward,
+    ConcatBackward,
     DivBackward,
     ExpBackward,
     Function,
@@ -27,6 +29,7 @@ from aurora.autograd import (
     SqrtBackward,
     SubBackward,
     SumBackward,
+    TanhBackward,
     TransposeBackward,
 )
 
@@ -281,6 +284,27 @@ class Tensor:
             out.creator = SiLUBackward(self)
         return out
 
+    def tanh(self) -> Tensor:
+        out_data = np.tanh(self._data)
+        out = Tensor(out_data, requires_grad=self.requires_grad, dtype=self.dtype)
+        if self.requires_grad:
+            out.creator = TanhBackward(self, out_data)
+        return out
+
+    def clamp(self, min_val: float | None = None, max_val: float | None = None) -> Tensor:
+        out_data = np.clip(
+            self._data,
+            a_min=min_val if min_val is not None else -np.inf,
+            a_max=max_val if max_val is not None else np.inf,
+        )
+        out = Tensor(out_data, requires_grad=self.requires_grad, dtype=self.dtype)
+        if self.requires_grad:
+            out.creator = ClampBackward(self, min_val, max_val)
+        return out
+
+    def clip(self, min_val: float | None = None, max_val: float | None = None) -> Tensor:
+        return self.clamp(min_val, max_val)
+
     def softmax(self, axis: int = -1) -> Tensor:
         shifted = self._data - np.max(self._data, axis=axis, keepdims=True)
         exp_data = np.exp(shifted)
@@ -417,3 +441,20 @@ def arange(
     requires_grad: bool = False,
 ) -> Tensor:
     return Tensor(np.arange(start, stop, step, dtype=np.float64), requires_grad=requires_grad)
+
+
+def concat(tensors: Sequence[Tensor], axis: int = -1) -> Tensor:
+    """Concatenate sequence of tensors along specified axis with autograd support."""
+    if not tensors:
+        raise ValueError("Cannot concatenate empty sequence of tensors")
+
+    first = tensors[0]
+    ax = axis if axis >= 0 else first.ndim + axis
+    split_indices = [int(x) for x in np.cumsum([t.shape[ax] for t in tensors[:-1]])]
+
+    out_data = np.concatenate([t.data for t in tensors], axis=ax)
+    req = any(t.requires_grad for t in tensors)
+    out = Tensor(out_data, requires_grad=req, dtype=first.dtype)
+    if req:
+        out.creator = ConcatBackward(tensors, ax, split_indices)
+    return out
