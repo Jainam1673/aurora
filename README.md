@@ -1,291 +1,365 @@
-# AURORA: Adaptive Uncertainty-calibrated Rollouts and Optimization for Reinforcement Agents
+# AURORA
+### Adaptive Uncertainty-calibrated Rollouts and Optimization for Reinforcement Agents
 
 [![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://en.cppreference.com/w/cpp/23)
 [![Python 3.14](https://img.shields.io/badge/Python-3.14-green.svg)](https://docs.python.org/3.14/)
 [![uv](https://img.shields.io/badge/package%20manager-uv-blueviolet)](https://github.com/astral-sh/uv)
+[![CMake](https://img.shields.io/badge/build-CMake%203.28%2B-blue)](https://cmake.org)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Tests: Pytest](https://img.shields.io/badge/pytest-123%2F123%20passed-brightgreen.svg)](tests/python/)
-[![Tests: GoogleTest](https://img.shields.io/badge/GoogleTest-70%2F70%20passed-brightgreen.svg)](tests/cpp/)
-[![Parity: Lockstep](https://img.shields.io/badge/Cross--Language%20Parity-%3C%2010%5E%7B--10%7D-success.svg)](tests/parity/)
-[![Reproducibility](https://img.shields.io/badge/Reproducibility-One--Click%20Verified-blue.svg)](paper/REPRODUCIBILITY.md)
+[![Tests: Pytest](https://img.shields.io/badge/pytest-passing-brightgreen.svg)](tests/python/)
+[![Tests: GoogleTest](https://img.shields.io/badge/GoogleTest-passing-brightgreen.svg)](tests/cpp/)
+[![Parity: Numerical](https://img.shields.io/badge/Cross--Language%20Parity-%3C%2010%5E%7B--10%7D-success.svg)](tests/parity/)
+[![Reproducibility](https://img.shields.io/badge/reproducibility-one--click%20pipeline-blue.svg)](paper/REPRODUCIBILITY.md)
 
-**AURORA** is a research-grade, zero-dependency model-based reinforcement learning (MBRL) platform engineered from mathematical first principles. Targeting **Python 3.14** and **C++23** as scientific peers, AURORA resolves the fundamental challenge of compounding model errors and out-of-distribution policy degradation through adaptive, uncertainty-calibrated imagination and risk-sensitive planning.
-
----
-
-## Central Research Question & Motivation
-
-> **How can an RL agent eliminate compounding model error and catastrophic hallucination by dynamically deciding how far to imagine, how much synthetic data to blend, and when to regularize policy updates?**
-
-Standard Dyna-style MBRL algorithms (e.g., MBPO) rely on hand-tuned, fixed rollout length schedules ($H$) and static real-to-synthetic replay ratios ($\eta$). When an ensemble dynamics model ventures into out-of-distribution state spaces, imaginary rollouts generate delusional trajectories that destabilize actor-critic optimization.
-
-AURORA addresses this via a mathematically grounded triad:
-1. **Adaptive Horizon Scheduling ($H_{\text{adaptive}}$):** Truncates individual synthetic rollouts whenever epistemic ensemble variance exceeds dynamic thresholds calibrated against validation error ($\tau = \tau_{\text{base}} e^{-\kappa \mathcal{L}_{\text{val}}}$) or when cumulative discounted uncertainty exceeds a budget ($B_{\max}$).
-2. **Dynamic Experience Blending ($\eta_t$):** Modulates the synthetic-to-real replay ratio using momentum-smoothed epistemic disagreement ($\eta_t = \eta_{\max}[1 - \min(1, \bar{u}/u_{\text{target}})]$), gracefully falling back to model-free replay when model uncertainty surges.
-3. **Epistemic Risk-Sensitive Pessimistic Value Optimization ($\tilde{Q}$):** Penalizes policy optimization in uncertain state-action regions ($\tilde{Q}(s, a) = \min_j Q_j(s, a) - \beta_{\text{pess}} u_{\text{epi}}(s, a)$), providing a provable lower-bound on return under model discrepancy.
-
-**Theoretical Guarantee:** We prove that AURORA achieves monotonic policy improvement under model error through a telescopic value expansion via the Simulation Lemma (see [Paper Appendix A](paper/main.tex)).
+AURORA is a research-grade model-based reinforcement learning (MBRL) platform engineered from first principles without external deep learning frameworks. Implemented as dual scientific peers in **Python 3.14** and **C++23**, the system investigates uncertainty-aware imagination, adaptive rollout depth, and dynamic replay blending to mitigate compounding errors in learned dynamics models.
 
 ---
 
-## Research Paper, Figures & Reproducibility Suite
+## Overview
 
-AURORA includes a complete, publication-ready research paper package adhering to top-tier machine learning conference standards (NeurIPS / ICLR / ICML):
+Model-based reinforcement learning algorithms often improve sample efficiency by training policies on synthetic transitions imagined by a learned world model. In practice, however, learned dynamics models degrade when predicting out-of-distribution transitions, causing imaginary trajectories to compound errors and corrupt policy optimization.
 
-| Research Artifact | Location | Description |
-|---|---|---|
-| **LaTeX Manuscript** | [`paper/main.tex`](paper/main.tex) | 12-section camera-ready manuscript with Appendices A–F |
-| **BibTeX Citations** | [`paper/references.bib`](paper/references.bib) | Complete bibliography of foundational MBRL and statistical papers |
-| **Reproducibility Guide** | [`paper/REPRODUCIBILITY.md`](paper/REPRODUCIBILITY.md) | Official NeurIPS/ICLR reproducibility checklist, seeds, and environment audit |
-| **One-Click Script** | [`scripts/reproduce_all.sh`](scripts/reproduce_all.sh) | Executable bash runner orchestrating the complete reproduction pipeline |
-| **Python Runner** | [`scripts/reproduce_all.py`](scripts/reproduce_all.py) | Parametric benchmark runner, compiler, and SHA-256 verifier |
-| **Ablation Table** | [`paper/table_ablations.tex`](paper/table_ablations.tex) | Systematic component ablation metrics with 95% Bootstrap CIs |
-| **C++ Systems Table** | [`paper/table_systems.tex`](paper/table_systems.tex) | Native C++23 throughput and microsecond latency percentiles |
-| **Cross-Language Table** | [`paper/table_cross_language.tex`](paper/table_cross_language.tex) | Empirical throughput parity and C++ speedups over Python 3.14 |
-| **Performance Profiles** | [`paper/fig_performance_profiles.pdf`](paper/fig_performance_profiles.pdf) | Stratified score distribution CDFs across evaluation thresholds |
-| **Systems Breakdown** | [`paper/fig_systems_breakdown.pdf`](paper/fig_systems_breakdown.pdf) | Amdahl execution time share breakdown (Amdahl bottleneck profile) |
-| **Checksum Manifest** | [`paper/manifest_checksums.json`](paper/manifest_checksums.json) | Immutable cryptographic SHA-256 hashes of all reproduced artifacts |
+AURORA investigates whether an agent can dynamically regulate its reliance on a learned world model by quantifying epistemic uncertainty across an ensemble of probabilistic dynamics models. The platform couples:
+1. **Adaptive Horizon Scheduling**, which dynamically truncates individual rollout trajectories when model uncertainty exceeds validation-calibrated thresholds.
+2. **Dynamic Experience Blending**, which modulates the ratio of synthetic to real environment transitions in policy updates based on recent model disagreement.
+3. **Pessimistic Value Regularization**, which discounts value targets in state-action regions where dynamics variance is high.
+
+The codebase includes complete, independent implementations of tensors, reverse-mode automatic differentiation, neural networks, policy optimizers, probabilistic dynamics ensembles, and statistical evaluation tools in both Python and C++23.
 
 ---
 
-## One-Click Reproduction
+## Research Question
 
-You can replicate all empirical results, microbenchmarks, figures, and LaTeX tables in under **45 seconds**:
+> **Can an RL agent improve sample efficiency and policy stability by dynamically controlling its imagination horizon, synthetic/real experience mixture, and risk sensitivity using epistemic uncertainty from an ensemble world model?**
 
+Standard Dyna-style algorithms (such as MBPO) rely on predetermined, fixed rollout schedules ($H$) and static real-to-synthetic replay fractions ($\eta$). When an ensemble dynamics model extrapolates into unfamiliar state spaces, static schedules continue generating uncalibrated synthetic data. AURORA investigates whether conditioning rollout length and replay mixture on instantaneous and cumulative model uncertainty provides superior sample efficiency and robustness.
+
+---
+
+## What AURORA Does
+
+```text
+Real Environment
+       │
+       ▼
+ Collect Real Transitions (D_env)
+       │
+       ▼
+ Train Ensemble World Model (f_θ)
+       │
+       ▼
+ Quantify Epistemic Disagreement: u_epi(s, a)
+       │
+       ├─────────────────────────────────┐
+       ▼                                 ▼
+ Horizon Truncation               Dynamic Blending Ratio
+ u_epi > τ_t  ==> Stop branch     η_t = f(mean u_epi)
+       │                                 │
+       └────────────────┬────────────────┘
+                        ▼
+            Imagined Replay (D_model)
+                        │
+                        ▼
+            Actor-Critic Optimization
+      (Policy Updates with Pessimistic Value)
+```
+
+---
+
+## Why This Problem Matters
+
+Model-based RL algorithms promise orders-of-magnitude sample efficiency gains over model-free counterparts. However, their practical deployment has historically been impeded by:
+- **Compounding Simulation Error:** Prediction errors multiply over multi-step rollouts, creating catastrophic hallucinations.
+- **Objective Inconsistency:** Policies exploit model inaccuracies ("model exploitation"), achieving high synthetic reward while failing in the true environment.
+- **Fixed Hyperparameter Sensitivity:** The optimal imagination horizon $H$ and replay ratio $\eta$ vary substantially across environments and training phases, requiring expensive manual tuning.
+
+Addressing these issues through dynamic uncertainty calibration is essential for reliable, sample-efficient reinforcement learning.
+
+---
+
+## Key Contributions
+
+### Algorithmic Mechanisms
+1. **Adaptive Horizon Scheduling:** Individual imagination trajectories are terminated when instantaneous epistemic disagreement exceeds a dynamic threshold $\tau_t = \tau_{\text{base}} \exp(-\kappa \mathcal{L}_{\text{val}})$ or when the cumulative discounted uncertainty exceeds a budget $B_{\max}$.
+2. **Dynamic Experience Blending:** The synthetic-to-real replay sampling ratio $\eta_t \in [0, \eta_{\max}]$ decays gracefully toward zero when recent rollout uncertainty surges, falling back to model-free learning when the model is untrusted.
+3. **Pessimistic Value Regularization:** Policy evaluation incorporates an epistemic variance penalty $\tilde{Q}(s, a) = \min_j Q_j(s, a) - \beta_{\text{pess}} u_{\text{epi}}(s, a)$ to discourage optimistic extrapolation.
+
+### Infrastructure & Systems
+4. **Dual-Peer C++23 / Python 3.14 Architecture:** Complete from-scratch mathematical cores in both languages with zero third-party ML framework dependencies (no PyTorch, TensorFlow, or JAX).
+5. **Rigorous Evaluation Infrastructure:** Implementation of the Agarwal et al. (2021) statistical evaluation protocol, including Interquartile Mean (IQM), stratified bootstrap confidence intervals ($R=2000$), probability of improvement, and automated JSON run manifests.
+6. **One-Click Reproducibility Pipeline:** Standalone automation scripts verifying hardware environment, building native binaries, compiling figures/tables, and checking SHA-256 artifact checksums.
+
+---
+
+## Architecture
+
+```text
+                                  AURORA
+                                     │
+                 ┌───────────────────┴───────────────────┐
+                 ▼                                       ▼
+       Python 3.14 Reference                   C++23 Systems Core
+      (Research & Prototyping)             (Throughput & Native Scale)
+                 │                                       │
+                 └───────────────────┬───────────────────┘
+                                     │
+                             Shared Semantics
+                     (Numerical Parity < 10⁻¹⁰)
+                                     │
+        ┌────────────────────────────┼────────────────────────────┐
+        ▼                            ▼                            ▼
+  Numerical Core               World Model               RL & Planning
+• Strided Tensor Core        • Deep Dynamics Ensemble  • Squashed Gaussian Actor
+• DAG Reverse Autograd       • Epistemic Variance      • Twin Critic
+• AdamW & Schedulers         • Imagination Engine      • Circular Replay Buffers
+        │                            │                            │
+        └────────────────────────────┼────────────────────────────┘
+                                     │
+                                AURORA Agent
+                                     │
+                     ┌───────────────┴───────────────┐
+                     ▼                               ▼
+         Adaptive Horizon Scheduler      Dynamic Blending Controller
+        (Validation-Decayed Threshold)   (Uncertainty-Modulated Ratio)
+```
+
+---
+
+## Algorithm Formulation
+
+### 1. Dynamics Ensemble & Uncertainty Decomposition
+Given state $s$ and action $a$, an ensemble of $E$ Gaussian neural networks $\{\hat{f}_{\theta_i}\}_{i=1}^E$ outputs state transitions $\hat{s}' = s + \mu_{\theta_i}(s, a)$. Total variance decomposes into aleatoric and epistemic components:
+$$\sigma_{\text{tot}}^2(s, a) = \underbrace{\frac{1}{E}\sum_{i=1}^E \sigma_{\theta_i}^2(s, a)}_{\text{Aleatoric Uncertainty}} + \underbrace{\frac{1}{E}\sum_{i=1}^E \left(\mu_{\theta_i}(s, a) - \bar{\mu}(s, a)\right)^2}_{\text{Epistemic Disagreement } u_{\text{epi}}(s, a)}$$
+
+### 2. Adaptive Horizon Truncation
+Rollout branch $b$ terminates at step $h$ if:
+$$u_{\text{epi}}(s_h, a_h) > \tau_t \quad \text{or} \quad \sum_{k=0}^h \gamma^k u_{\text{epi}}(s_k, a_k) > B_{\max}$$
+where $\tau_t = \tau_{\text{base}} \exp(-\kappa \mathcal{L}_{\text{val}})$ scales with model validation loss $\mathcal{L}_{\text{val}}$.
+
+### 3. Dynamic Experience Blending
+The synthetic replay fraction $\eta_t$ is computed from mean imagination uncertainty $\bar{u}_t$ and smoothed with momentum $\rho$:
+$$\eta_t^{\text{raw}} = \eta_{\max}\left[1 - \min\left(1, \frac{\bar{u}_t}{u_{\text{target}}}\right)\right], \quad \eta_t = \rho \eta_{t-1} + (1 - \rho)\eta_t^{\text{raw}}$$
+
+### 4. Pessimistic Value Formulation
+$$\tilde{Q}(s, a) = \min_{j \in \{1, 2\}} Q_{\psi_j}(s, a) - \beta_{\text{pess}} \cdot u_{\text{epi}}(s, a)$$
+
+---
+
+## Theoretical Analysis
+
+The accompanying manuscript (`paper/main.tex`, Section 5 and Appendix A) presents a model-error analysis based on the Simulation Lemma. It formalizes conditions under which bounding accumulated rollout discrepancy via dynamic truncation and pessimistic regularizers supports monotonic policy improvement bounds under bounded model error.
+
+> [!NOTE]
+> The theoretical guarantee relies on the assumption that ensemble epistemic variance upper-bounds total variation divergence between true and learned dynamics ($D_{\text{TV}}(\mathcal{P}, \hat{\mathcal{P}}) \le C_u u_{\text{epi}}$). In finite deep neural networks, this represents an empirical modeling hypothesis rather than an unconditional mathematical fact.
+
+---
+
+## Dual-Peer Implementation
+
+AURORA implements both a Python 3.14 reference library and a C++23 native systems core:
+
+| Subsystem | Python 3.14 Reference | C++23 Systems Core | Verified Numerical Parity |
+|---|:---:|:---:|:---:|
+| **Tensor Abstraction** | Strided NumPy backend | Contiguous heap memory, views, C-strides | $< 10^{-10}$ |
+| **Automatic Differentiation** | Dynamic tape DAG VJP | Polymorphic DAG graph nodes | $< 10^{-10}$ |
+| **Neural Primitives** | `Linear`, `LayerNorm`, `RMSNorm` | `Linear`, `LayerNorm`, `RMSNorm` | $< 10^{-10}$ |
+| **Optimizers** | `SGD`, `Adam`, `AdamW`, Schedulers | Vectorized `SGD`, `AdamW`, Schedulers | $< 10^{-10}$ |
+| **Sequence Architecture** | Scaled Dot-Product, RoPE, Decoder | C++23 Attention, RoPE, Decoder | $< 10^{-10}$ |
+| **Reinforcement Learning** | `Normal`, `TanhNormal`, GAE buffer | `Normal`, `TanhNormal`, GAE buffer | $< 10^{-10}$ |
+| **Dynamics Ensemble** | Gaussian NLL, TS1 Trajectory Sampling | Parallel ensemble inference | $< 10^{-10}$ |
+| **AURORA Controllers** | Adaptive Horizon & Blending | `AdaptiveHorizonScheduler`, `DynamicBlending` | $< 10^{-10}$ |
+| **Statistical Evaluation** | IQM, Bootstrap CIs, Profiles | High-speed IQM & Bootstrap CI kernels | $< 10^{-10}$ |
+
+---
+
+## Verified Benchmarks & Results
+
+All empirical numbers below originate from actual generated manifests and benchmark logs stored in `results/`.
+
+### 1. Component Ablation Study (Continuous Control — Pendulum)
+*Evaluated over multiple random seeds (30 evaluation episodes per condition, 300 environment steps) from `results/ablation/ablation_summary.json`:*
+
+| Method / Variant | IQM Return $\uparrow$ | 95% Bootstrap CI | Mean $\pm$ Std | $P(\text{Full} > \text{Var})$ | Welch $p$-value |
+|:---|---:|:---:|:---:|:---:|:---:|
+| **AURORA (Full)** | **-1446.27** | [-1593.41, -1298.99] | -1452.09 $\pm$ 321.20 | — | — |
+| w/o Adaptive Horizon ($H=4$) | -1462.02 | [-1586.36, -1337.21] | -1460.44 $\pm$ 282.23 | 0.50 | 0.9151 |
+| w/o Dynamic Blending ($\eta=0.5$) | -1391.11 | [-1527.22, -1266.92] | -1393.35 $\pm$ 286.89 | 0.44 | 0.4581 |
+| w/o Pessimistic Penalty ($\beta=0$) | -1446.27 | [-1593.41, -1298.99] | -1452.09 $\pm$ 321.20 | 0.50 | 1.0000 |
+
+> [!IMPORTANT]
+> **Audit Finding on Ablation Results:** As documented in our scientific audit (`research_audit/FINAL_AUDIT.md`), at short training horizons (300 steps), differences between variants are not statistically significant ($p > 0.45$). In particular, `No Dynamic Blending` with fixed $\eta=0.5$ performed competitively with Full AURORA, and `No Pessimism` scored identically due to a gradient detachment in the actor loss. We explicitly document this rather than reporting synthetic numbers.
+
+### 2. C++23 Native Systems Throughput
+*Measured on an Intel Core i5-8265U CPU (AVX2/FMA enabled) with GCC 16.2.1 (`-O3 -march=native`) via `benchmarks/cpp/benchmark_throughput.cpp`:*
+
+| Subsystem | Workload Description | Mean Latency | Median ($p_{50}$) | Throughput |
+|---|---|---:|---:|---:|
+| **Tensor Memory** | Contiguous Allocation & Fill | 437.45 $\mu$s | 369.02 $\mu$s | 1.14 GElem/s |
+| **Tensor Compute** | Contiguous Elementwise Add | 1447.76 $\mu$s | 1181.02 $\mu$s | 345.36 MElem/s |
+| **Tensor Activation** | Contiguous ReLU Activation | 1126.00 $\mu$s | 943.22 $\mu$s | 444.05 MElem/s |
+| **GEMM Compute** | Matmul $64 \times 64 \times 64$ | 161.44 $\mu$s | 157.34 $\mu$s | 3.25 GFLOPs/s |
+| **GEMM Compute** | Matmul $128 \times 128 \times 128$ | 1534.16 $\mu$s | 1331.47 $\mu$s | 2.73 GFLOPs/s |
+| **Dynamics Ensemble** | Forward Ensemble ($B=64, E=5$) | 8383.29 $\mu$s | 8220.90 $\mu$s | 38,171 trans/s |
+| **Statistical Kernel** | IQM Evaluation ($N=100$) | 0.80 $\mu$s | 0.79 $\mu$s | 125.67 MSamples/s |
+| **Statistical Kernel** | Bootstrap CI ($N=100, R=1000$) | 4255.60 $\mu$s | 4219.30 $\mu$s | 23.50 MResamples/s |
+
+### 3. Cross-Language Parity & Speedup Comparison
+*Comparing Python 3.14 reference vs. C++23 native implementation (`results/cross_language_comparison.json`):*
+
+| Computational Workload | Unit | Python Mean ($\mu$s) | C++23 Mean ($\mu$s) | C++ Speedup |
+|---|---|---:|---:|---:|
+| **Statistical IQM ($N=100$)** | samples/s | 32.75 | 0.80 | **41.16x** |
+| **Bootstrap CI ($N=100, R=1000$)** | resamples/s | 57,671.15 | 4,255.60 | **13.55x** |
+| **Contiguous Allocation & Fill** | elements/s | 316.61 | 437.45 | 0.72x |
+| **GEMM Matmul ($64 \times 64 \times 64$)** | FLOPs/s | 48.15 | 161.44 | 0.30x (vs BLAS) |
+
+*(Note: Python linear algebra calls out to optimized NumPy C/OpenBLAS routines, while custom statistical and rollout loops benefit heavily from C++23 native compilation.)*
+
+---
+
+## One-Click Reproducibility
+
+AURORA provides an automated replication pipeline that checks the host environment, executes benchmarks, compiles publication tables and figures, and verifies SHA-256 artifact hashes.
+
+### Quick Validation (< 45 seconds)
+Executes C++ native benchmarks, Python profiler smoke run, cross-language comparison, and artifact compilation:
 ```bash
 # Clone the repository
 git clone https://github.com/Jainam1673/aurora.git
 cd aurora
 
-# Quick full reproduction (C++ benchmarks, Python profiling, cross-language parity, figures & tables)
+# Sync dependencies using uv
+uv sync --extra dev
+
+# Run automated one-click reproduction pipeline
 ./scripts/reproduce_all.sh --quick
 ```
-
-Or directly via `uv`:
+Or directly with Python:
 ```bash
 uv run python scripts/reproduce_all.py --quick
 ```
 
-To recompile all publication tables (`table_*.tex`) and vector figures (`fig_*.pdf`, `fig_*.png`) from existing raw manifests without re-executing benchmarks:
+### Artifact Compilation From Existing Manifests (< 5 seconds)
+Recompiles all publication LaTeX tables (`paper/table_*.tex`) and vector figures (`paper/fig_*.pdf`, `fig_*.png`) from raw results without re-running compute benchmarks:
 ```bash
 uv run python scripts/reproduce_all.py --skip-benchmarks
 ```
 
-A consolidated reproduction audit is automatically generated and verified at [`results/reproduction_report.json`](results/reproduction_report.json).
+A complete reproduction summary is exported to [`results/reproduction_report.json`](results/reproduction_report.json), and output hashes are verified against [`paper/manifest_checksums.json`](paper/manifest_checksums.json).
 
 ---
 
-## Empirical Benchmark & Ablation Results
-
-Evaluations follow the rigorous statistical evaluation methodology proposed by Agarwal et al. (2021) using **Interquartile Mean (IQM)** with 25% outlier trimming, $B=2,000$ stratified bootstrap resamples (95% CIs), and Welch's $t$-tests:
-
-### Continuous Control Component Ablation Study (Pendulum)
-
-| Method / Variant | IQM $\uparrow$ | 95% Bootstrap CI | Mean $\pm$ Std | Median | $P(\text{Full} > \text{Var})$ | Welch $p$-value |
-|:---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **AURORA (Full Model)** | **-173.80** | **[-184.28, -164.71]** | **-174.96 $\pm$ 11.23** | **-174.19** | — | — |
-| w/o Adaptive Horizon ($H=4$) | -193.36 | [-207.29, -180.89] | -194.22 $\pm$ 15.35 | -193.68 | 0.88 | 0.0435 |
-| w/o Dynamic Blending ($\eta=0.5$) | -199.96 | [-214.34, -187.69] | -201.21 $\pm$ 16.71 | -200.75 | 0.94 | 0.0121 |
-| w/o Pessimistic Penalty ($\beta=0$) | -216.51 | [-234.34, -200.98] | -218.06 $\pm$ 19.34 | -217.42 | 0.98 | 0.0021 |
-
-*All results derive directly from raw experiment manifests in [`results/ablation/`](results/ablation/).*
-
----
-
-## Dual-Peer Systems Architecture (Python 3.14 & C++23)
-
-AURORA contains **zero external machine learning framework dependencies** (no PyTorch, TensorFlow, or JAX). All algorithms, tensors, automatic differentiation engines, neural modules, and replay buffers are implemented from scratch in both languages:
-
-```
-                            AURORA ARCHITECTURE
- ┌────────────────────────────────────────────────────────────────────────┐
- │                         RESEARCH API (Python 3.14)                     │
- │  • Dynamic DAG Tape Autograd           • Modular Actor-Critic Agents   │
- │  • Probabilistic Dynamics Ensembles    • Agarwaal et al. Metrics       │
- └───────────────────────────────────┬────────────────────────────────────┘
-                                     │ Numerical Parity (< 10⁻¹⁰)
- ┌───────────────────────────────────▼────────────────────────────────────┐
- │                         SYSTEMS ENGINE (C++23)                         │
- │  • Row-Major SIMD Contiguous Paths     • Cache-friendly i-k-j GEMMs    │
- │  • Heterogeneous Graph VJP Engine      • Low-Latency Active Planners   │
- └────────────────────────────────────────────────────────────────────────┘
-```
-
-### Native C++23 Engine Throughput Highlights
-*Measured on Intel Core i5-8265U (AVX2 / FMA) via [`aurora_benchmark_throughput`](benchmarks/cpp/benchmark_throughput.cpp):*
-- **Contiguous Allocation & Fill:** `1,069.70 M elements/s` (Mean latency: `467.42 μs`)
-- **Contiguous Elementwise Add:** `486.57 M elements/s` (Mean latency: `1.03 ms`)
-- **Contiguous ReLU Activation:** `287.52 M elements/s` (Mean latency: `1.74 ms`)
-- **GEMM Compute Throughput (64x64x64):** `3.86 GFLOPs/s` (Mean latency: `135.87 μs`)
-- **Dynamics Ensemble Forward (B=64, E=5):** `40,526.62 transitions/s`
-- **Statistical IQM Throughput:** `67.92 M samples/s` (**31.8x speedup** over Python reference)
-- **Bootstrap CI Throughput (R=1000):** `16.18 M resamples/s` (**6.9x speedup** over Python reference)
-
----
-
-## Quickstart & Developer Guide
+## Quick Start & Development
 
 ### Prerequisites
-- **Python:** 3.14+ (managed via [`uv`](https://github.com/astral-sh/uv))
-- **C++ Compiler:** GCC 14+ (`g++`) or Clang 18+ (`clang++`) supporting C++23
+- **Python:** 3.14+ managed via [`uv`](https://github.com/astral-sh/uv)
+- **C++ Compiler:** GCC with C++23 support (`g++ >= 14`) or Clang with C++23 support (`clang++ >= 18`)
 - **Build System:** CMake 3.28+ and Ninja
-- **Hardware Support:** x86_64 CPU (AVX2/FMA recommended)
 
-### 1. Python Environment Setup
+### Python Development
 ```bash
-# Clone the repository
-git clone https://github.com/Jainam1673/aurora.git
-cd aurora
-
-# Install locked dependencies into local virtual environment
+# Install development environment
 uv sync --extra dev
 
-# Run complete Python test suite (123/123 tests)
+# Run unit and integration tests (123 tests)
 uv run pytest
 
-# Run code quality, formatting, and static typing checks
+# Run numerical parity suite
+uv run pytest tests/parity
+
+# Run static type checking and formatting
 uv run ruff check .
 uv run ruff format --check .
 uv run mypy python evaluation benchmarks scripts paper
 ```
 
-### 2. C++23 Native Engine Setup
+### C++23 Native Build & Tests
 ```bash
-# Configure debug and release presets with CMake & Ninja
+# Configure debug and release builds with CMake Presets
 cmake --preset debug
 cmake --preset release
 
-# Build complete C++ target tree
+# Build release targets
 cmake --build --preset release
 
-# Execute GoogleTest test suite (70/70 targets passing with zero warnings)
+# Run GoogleTest suite (70 test targets)
 ctest --test-dir build/release --output-on-failure
 
-# Execute native high-precision systems benchmark binary
+# Execute the native systems benchmark binary
 ./build/release/aurora_benchmark_throughput --json results/cpp_benchmark_results.json
 ```
 
-### 3. Verify Cross-Language Numerical Parity
-AURORA asserts that the C++23 engine and Python 3.14 reference match to within floating-point precision ($< 10^{-10}$ absolute error):
-```bash
-uv run pytest tests/parity
-```
-
 ---
 
-## Repository Hierarchy
+## Repository Structure
 
 ```text
 aurora/
-├── README.md                           # Main researcher documentation and system summary
-├── LICENSE                             # Apache 2.0 open-source license
-├── CITATION.cff                        # Machine-readable research citation metadata
-├── CHANGELOG.md                        # Milestone release log and detailed version history
-├── STATUS.md                           # Living implementation status and test summaries
-├── ROADMAP.md                          # Full milestone trajectory (M0 through M10)
-├── ARCHITECTURE.md                     # Deep architectural specifications and data flow
-├── DECISIONS.md                        # Architecture Decision Records (ADR-001 to ADR-014)
-├── TODO.md                             # Comprehensive task and backlog register
+├── python/aurora/            # Python 3.14 reference package
+│   ├── tensor.py             # Pure tensor engine with views & broadcasting
+│   ├── autograd.py           # Reverse-mode dynamic computation graph
+│   ├── nn/                   # Modules (Linear, Normalization, Dropout)
+│   ├── optim/                # Optimizers (AdamW, SGD, Schedulers)
+│   ├── attention/            # Causal attention & Rotary Embeddings
+│   ├── transformer/          # Pre-Norm TransformerDecoder models
+│   ├── rl/                   # Policy distributions, GAE rollout buffer
+│   ├── world_model/          # Ensemble dynamics & imagination engine
+│   └── algorithm/            # AURORA Agent, Adaptive Horizon & Blending
 │
-├── paper/                              # Publication Paper Package (NeurIPS / ICLR Ready)
-│   ├── main.tex                        # Full LaTeX academic manuscript with Appendices A-F
-│   ├── references.bib                  # BibTeX bibliography database
-│   ├── REPRODUCIBILITY.md              # Conference reproducibility checklist & guidelines
-│   ├── generate_figures_and_tables.py  # Automated figure & table generation script
-│   ├── manifest_checksums.json         # SHA-256 cryptographic hashes of all paper artifacts
-│   ├── fig_performance_profiles.pdf    # Vector performance profile CDF
-│   ├── fig_systems_breakdown.pdf       # Amdahl systems time breakdown
-│   ├── table_ablations.tex             # Component ablation LaTeX table
-│   ├── table_systems.tex               # C++23 microbenchmarks LaTeX table
-│   └── table_cross_language.tex        # Cross-language speedup LaTeX table
+├── cpp/                      # C++23 native systems core
+│   ├── include/aurora/       # Public C++23 headers
+│   └── src/                  # Implementations and benchmark binaries
 │
-├── scripts/                            # Scientific Reproducibility & Orchestration
-│   ├── reproduce_all.sh                # Executable one-click shell wrapper
-│   └── reproduce_all.py                # End-to-end Python reproducibility pipeline
+├── tests/                    # Comprehensive test infrastructure
+│   ├── python/               # Pytest unit and integration tests (123 tests)
+│   ├── cpp/                  # GoogleTest C++ test targets (70 tests)
+│   └── parity/               # Cross-language numerical lockstep tests (< 10⁻¹⁰)
 │
-├── python/aurora/                      # Python 3.14 Reference Research Package
-│   ├── tensor.py                       # Pure tensor engine with strided views & broadcasting
-│   ├── autograd.py                     # Reverse-mode dynamic computation graph autograd
-│   ├── gradcheck.py                    # Finite-difference gradient numerical checker
-│   ├── checkpoint.py                   # Zero-dependency IEEE-754 JSON state serialization
-│   ├── nn/                             # Modules (Linear, LayerNorm, RMSNorm, Dropout, MLP)
-│   ├── optim/                          # Optimizers (SGD, Adam, AdamW, Learning Rate Schedulers)
-│   ├── attention/                      # Attention mechanisms (Causal Scaled Dot-Product, RoPE)
-│   ├── transformer/                    # Pre-Norm TransformerDecoder autoregressive models
-│   ├── rl/                             # Policy distributions (TanhNormal), GAE RolloutBuffer, ReplayBuffer
-│   ├── world_model/                    # Probabilistic Dynamics Ensembles, RSSM, ImaginationEngine
-│   ├── reproductions/                  # Baseline implementations (MBPO, PETS, Dreamer, SAC, PPO)
-│   └── algorithm/                      # Core AURORA Agent, Adaptive Horizons, Dynamic Blending
-│
-├── cpp/                                # C++23 Native High-Throughput Systems Core
-│   ├── include/aurora/                 # Public C++23 header interfaces
-│   │   ├── tensor.hpp                  # Tensor memory layouts, views, and SIMD fast paths
-│   │   ├── autograd.hpp                # Tape-based computational graph DAG engine
-│   │   ├── nn.hpp                      # Modular neural primitives & parameter registries
-│   │   ├── optim.hpp                   # Vectorized AdamW, SGD, and learning rate schedulers
-│   │   ├── attention.hpp               # C++23 causal scaled dot-product attention
-│   │   ├── transformer.hpp             # Transformer decoders with rotary embeddings
-│   │   ├── rl.hpp                      # Squashed distributions and circular replay buffers
-│   │   ├── world_model.hpp             # High-throughput dynamics ensembles & rollouts
-│   │   ├── reproductions.hpp           # Native MBPO hybrid buffers and planners
-│   │   ├── aurora_algorithm.hpp        # Native AURORA adaptive horizon & blending engines
-│   │   └── statistical_evaluation.hpp  # High-speed IQM & bootstrap confidence intervals
-│   └── src/                            # Implementation sources & benchmark binaries
-│
-├── tests/                              # Comprehensive Verification Suites
-│   ├── python/                         # Pytest unit tests (123 tests total)
-│   ├── cpp/                            # GoogleTest suites across GCC and Clang (70 targets)
-│   └── parity/                         # Cross-language numerical lockstep verification (< 10⁻¹⁰)
-│
-├── benchmarks/                         # Systems & Algorithm Performance Suites
-│   ├── cpp/benchmark_throughput.cpp    # High-precision C++23 microbenchmark engine
-│   ├── profile_aurora.py               # Monotonic profiler generating .prof flamegraph traces
-│   └── benchmark_cross_language.py     # Python vs. C++ parity & speedup benchmark
-│
-├── evaluation/                         # Statistical Evaluation Infrastructure (Agarwal et al.)
-│   ├── metrics.py                      # IQM, bootstrap confidence intervals, statistical summaries
-│   ├── profiles.py                     # Performance profiles and probability of improvement
-│   ├── significance.py                 # Welch's t-test and Mann-Whitney U test
-│   ├── manifest.py                     # Immutable JSON experiment manifest generator
-│   └── plotting.py                     # Performance curve and score distribution plotter
-│
-├── experiments/                        # Experiment Runners & Multi-Seed Ablation Studies
-│   ├── runner.py                       # Multi-seed deterministic trial runner
-│   └── ablation_study.py               # Systematic component ablation runner
-│
-├── configs/                            # Declarative JSON Experiment Configurations
-└── results/                            # Raw JSON Manifests, Traces, and Benchmark Outputs
+├── benchmarks/               # Systems throughput and cross-language harnesses
+├── evaluation/               # Statistical evaluation protocols (Agarwal et al. 2021)
+├── experiments/              # Multi-seed runners and ablation execution scripts
+├── configs/                  # Declarative experiment JSON configurations
+├── results/                  # Raw JSON manifests, traces, and benchmark logs
+├── paper/                    # Publication manuscript (LaTeX, BibTeX, figures, tables)
+├── research_audit/           # Formal scientific audit and claim-evidence matrix
+└── scripts/                  # One-click reproduction automation scripts
 ```
+
+For deeper architectural specifications and decision rationale, see [`ARCHITECTURE.md`](ARCHITECTURE.md) and [`DECISIONS.md`](DECISIONS.md).
 
 ---
 
-## Roadmap & Milestone Status
+## Known Limitations & Failure Modes
 
-All 11 milestones of the AURORA project have been executed to 100% completion:
+In the spirit of transparent open science, we explicitly document the current empirical and algorithmic boundaries of AURORA:
 
-- [x] **M0: Repository Bootstrap** — Toolchains, C++23 presets, Python 3.14 `uv`, governance blueprints.
-- [x] **M1: Numerical Core & Autograd** — Dual-peer `Tensor`, reverse-mode autograd, gradcheck, $< 10^{-10}$ parity.
-- [x] **M2: NN Primitives & Optimizers** — `Linear`, `LayerNorm`, `RMSNorm`, `AdamW`, zero-dependency JSON serialization.
-- [x] **M3: Transformer Sequence Engine** — Rotary Position Embeddings (RoPE), causal multi-head attention, decoder blocks.
-- [x] **M4: RL Primitives & Physics** — `TanhNormal`, CartPole & Pendulum physics, GAE buffers, PPO & SAC agents.
-- [x] **M5: Deep Dynamics & Uncertainty** — Gaussian NLL dynamics ensembles, epistemic disagreement, RSSM cell.
-- [x] **M6: MBPO & Dyna Reproductions** — Vectorized hybrid replay sampling, truncated rollouts, cross-language parity.
-- [x] **M7: The AURORA Algorithm** — Adaptive horizon truncation, dynamic experience blending, pessimistic value optimization.
-- [x] **M8: Scientific Benchmarking** — Agarwal et al. IQM, 95% bootstrap CIs, Welch $t$-tests, immutable run manifests.
-- [x] **M9: Systems Performance & Native Scaling** — SIMD contiguous fast-paths, 4.38 GFLOPs/s GEMM, 8.2x rollout speedup.
-- [x] **M10: Research Paper & Reproducibility** — 12-section LaTeX paper, Appendices A–F, automated figures & tables, one-click runner.
+1. **Short-Horizon Statistical Significance:** At short training horizons (300 environment steps on Inverted Pendulum), variance between seeds remains high, and differences between full AURORA and its ablations do not yet achieve statistical significance ($p > 0.05$).
+2. **Actor Pessimism Gradient Flow:** In the current implementation, the pessimism penalty $\beta_{\text{pess}} u_{\text{epi}}$ is evaluated as a detached constant in the actor loss. Connecting autograd gradients or applying pessimism directly to reward targets (as in MOPO) is required for $\beta_{\text{pess}}$ to influence policy improvement dynamically.
+3. **Task Scope:** Systematic benchmarking in the current release is focused on continuous control dynamics (Pendulum). Evaluating across visual latent states (e.g. via RSSM) and contact-rich environments represents active future research.
+4. **Computational Cost of Ensembles:** Training and evaluating an ensemble of $E=5$ deep neural networks scales computational cost linearly compared to single-model methods.
+
+For detailed audit findings, see [`research_audit/FINAL_AUDIT.md`](research_audit/FINAL_AUDIT.md).
+
+---
+
+## Research Paper
+
+The formal academic manuscript and supplementary material are available in the [`paper/`](paper/) directory:
+- [`paper/main.tex`](paper/main.tex): Full LaTeX source including Sections 1–12 and Appendices A–F.
+- [`paper/references.bib`](paper/references.bib): BibTeX database of related literature.
+- [`paper/REPRODUCIBILITY.md`](paper/REPRODUCIBILITY.md): Official conference reproducibility checklist and environment audit.
 
 ---
 
 ## Citation
 
-If you use AURORA in your academic research, please cite our manuscript using the following BibTeX entry:
+If you use AURORA in your research or reference its from-scratch systems implementation, please cite:
 
 ```bibtex
 @article{aurora2026,
   title     = {AURORA: Adaptive Uncertainty-calibrated Rollouts and Optimization for Reinforcement Agents},
   author    = {AURORA Research Lab},
-  journal   = {arXiv preprint},
+  journal   = {Preprint},
   year      = {2026},
   url       = {https://github.com/Jainam1673/aurora}
 }

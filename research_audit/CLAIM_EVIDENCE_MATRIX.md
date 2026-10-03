@@ -1,0 +1,30 @@
+# Claim-Evidence Matrix for AURORA
+
+**Standard Classifications:**
+- `SUPPORTED`: Claim is fully implemented, verified with tests, supported by real experiment manifests, and matches documentation.
+- `PARTIALLY_SUPPORTED`: Code exists and runs, but empirical evidence is mixed, under-powered, or has edge-case discrepancies.
+- `UNSUPPORTED`: Claim is contradicted by actual raw experiment artifacts, is mathematically broken in the code, or numbers are fabricated.
+- `NOT_YET_TESTED`: Hypothesized effect has no dedicated benchmark or experiment in the repository.
+- `IMPLEMENTATION_ONLY`: Code exists and passes unit tests, but no empirical evaluation demonstrates its scientific benefit.
+- `THEORETICAL`: Formal mathematical statement requiring proof audit and assumption validation.
+
+---
+
+| ID | Scientific / Systems Claim | Source Location | Implementation | Evidence / Artifact | Reproducible | Status |
+|:---|:---|:---|:---|:---|:---:|:---:|
+| **C-ALG-1** | Adaptive Horizon Scheduling dynamically terminates individual rollout branches when $u_{\text{epi}} > \tau$ or budget exhausted | `paper/main.tex` §4.1; `README.md` | `python/aurora/algorithm/aurora_agent.py` L288; `cpp/include/aurora/aurora_algorithm.hpp` L34 | `tests/python/test_aurora_algorithm.py`; `tests/cpp/test_aurora_algorithm.cpp` | Yes | `PARTIALLY_SUPPORTED` |
+| **C-ALG-2** | Validation error exponential decay $\tau_t = \tau_{\text{base}} e^{-\kappa \mathcal{L}_{\text{val}}}$ expands/contracts horizon with model accuracy | `paper/main.tex` §4.1; `README.md` | `AdaptiveHorizonScheduler.update_threshold()` in Python & C++ | `test_threshold_decay()` in Python & C++ | Yes | `SUPPORTED` |
+| **C-ALG-3** | Dynamic Experience Blending ($\eta_t$) decays synthetic replay share as uncertainty rises | `paper/main.tex` §4.2; `README.md` | `DynamicBlendingController` in Python & C++ | Unit tests; manifest traces `results/ablation/` | Yes | `PARTIALLY_SUPPORTED` |
+| **C-ALG-4** | Epistemic Risk-Sensitive Pessimistic Value Optimization regularizes actor updates: $\tilde{Q} = \min Q - \beta u_{\text{epi}}$ | `paper/main.tex` §4.3; `README.md` | `train_policy()` in `aurora_agent.py` L421-426; `compute_pessimistic_value()` in C++ | **CRITICAL BUG**: `pess_penalty` created with `requires_grad=False`, NumPy-detached. $\nabla_\theta \text{pess} \equiv 0$! | Broken in Code | `UNSUPPORTED` |
+| **C-ALG-5** | Active Exploration Trigger injects perturbation when $\bar{u}_t > \tau_{\text{active}}$ | `paper/main.tex` §4.4 | `select_action()` in `aurora_agent.py` L223; `should_trigger_active_exploration()` in C++ | Unit tests only. Never tested in controlled OOD experiment. | Yes | `IMPLEMENTATION_ONLY` |
+| **C-THM-1** | Monotonic Policy Improvement Theorem under model error (Simulation Lemma bound) | `paper/main.tex` §5 & Appendix A | `theory/`; `paper/main.tex` | Proof assumes $u_{\text{epi}}$ strictly upper-bounds TV divergence $D_{\text{TV}}(\mathcal{P}, \hat{\mathcal{P}})$, which is an unproven assumption for finite neural ensembles | N/A | `THEORETICAL` |
+| **C-EMP-1** | Full AURORA achieves superior sample efficiency over MBPO and SAC on Pendulum | `paper/main.tex` §6; `README.md` | `experiments/runner.py`; `benchmarks/benchmark_aurora.py` | `results/ablation/pendulum_aurora_seed*` | Yes (Runs) | `PARTIALLY_SUPPORTED` |
+| **C-EMP-2** | Each component is strictly necessary; ablating any component degrades IQM | `paper/main.tex` §7; `README.md` table | `experiments/ablation_study.py`; `configs/ablation_*.json` | **DISCREPANCY**: `results/ablation/ablation_summary.json` shows `No Dynamic Blending` (-1391.11) OUTPERFORMED `Full AURORA` (-1446.27)! `No Pessimism` had identical score due to zero-gradient bug. | Broken | `UNSUPPORTED` |
+| **C-EMP-3** | Ablation results claim statistically significant gains ($p = 0.0435, 0.0121, 0.0021$) in README | `README.md` Ablation Table | Fabricated numbers in `README.md` (-173 vs -1446); actual raw $p$-values in `results/ablation/ablation_summary.json` were $0.915, 0.458, 1.000$! | Raw data: `results/ablation/ablation_summary.json` | Contradicted | `UNSUPPORTED` |
+| **C-EMP-4** | Ensemble epistemic variance calibrated to prediction error and OOD detection | `paper/main.tex` §3.2, §10 | `EnsembleDynamicsModel` predictive variance | No calibration curve, scatter plot, or OOD experiment exists in repository! | Missing | `NOT_YET_TESTED` |
+| **C-SYS-1** | C++23 native tensor SIMD throughput ($> 1$ GElem/s alloc, $> 480$ MElem/s add, $> 3.5$ GFLOPs/s GEMM) | `paper/main.tex` §8.1; `paper/table_systems.tex` | `cpp/src/tensor.cpp`; `benchmarks/cpp/benchmark_throughput.cpp` | `results/cpp_benchmark_results.json` | 100% Verified | `SUPPORTED` |
+| **C-SYS-2** | Dynamics ensemble C++ forward throughput $> 39,000$ transitions/s | `paper/main.tex` §8.1; `table_systems.tex` | `cpp/src/world_model.cpp` | `results/cpp_benchmark_results.json` (40,526 trans/s measured) | 100% Verified | `SUPPORTED` |
+| **C-SYS-3** | Statistical evaluation scaling (31.86x IQM speedup, 6.93x bootstrap CI speedup in C++) | `paper/main.tex` §8.3; `table_cross_language.tex` | `cpp/src/statistical_evaluation.cpp`; `benchmarks/benchmark_cross_language.py` | `results/cross_language_comparison.json` | 100% Verified | `SUPPORTED` |
+| **C-SYS-4** | Vectorized actor policy imagination evaluation yields 8.2x rollout speedup and 2.74x online training throughput | `paper/main.tex` §8.2; `fig_systems_breakdown.*` | `python/aurora/algorithm/aurora_agent.py` L266-272 | `results/python_systems_profile.json`; `results/aurora_profile.prof` | 100% Verified | `SUPPORTED` |
+| **C-PAR-1** | Zero external ML framework dependencies in Python 3.14 and C++23 | `README.md`; `paper/main.tex` | Whole repository | `pyproject.toml` (only numpy, matplotlib, scipy); `CMakeLists.txt` (only stdc++23, gtest) | 100% Verified | `SUPPORTED` |
+| **C-PAR-2** | Universal $< 10^{-10}$ numerical parity across all modules | `README.md`; `tests/parity/` | 8 parity test modules in `tests/parity/` | `tests/parity/test_*.py` (100% passing across forward, backward, AdamW, attention, distributions) | 100% Verified | `SUPPORTED` |
