@@ -122,4 +122,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cross-language systems comparison harness `benchmarks/benchmark_cross_language.py` demonstrating 31.8x C++ speedup on statistical IQM and 6.9x speedup on bootstrap confidence intervals.
   - Maintained 100% test pass rate across pytest (123/123 tests passing 42% faster in 4.96s) and GoogleTest (70/70 targets on GCC Debug, GCC Release, and Clang Debug with zero compiler warnings).
   - ADR-013: Systems Benchmarking, Throughput Maximization, and Native C++23 Scaling.
+- **M10 Research Paper, Appendices & Reproducibility Package**:
+  - Full academic LaTeX manuscript (`paper/main.tex`) and BibTeX database (`paper/references.bib`) featuring 12 core sections and Appendices A–F (monotonic policy improvement proof, full hyperparameter audit, continuous environment physics, systems architecture, cross-language numerical parity audit, and reproducibility checklist).
+  - Automated publication asset compilation script (`paper/generate_figures_and_tables.py`) ingesting raw experiment manifests to compile LaTeX tables (`table_ablations.tex`, `table_systems.tex`, `table_cross_language.tex`) and vector PDF / 300 DPI PNG figures (`fig_performance_profiles.*`, `fig_systems_breakdown.*`).
+  - One-click end-to-end scientific reproducibility suite (`scripts/reproduce_all.py`, `scripts/reproduce_all.sh`) automating host environment audits, native C++23 benchmark execution, Python flamegraph profiling, cross-language parity validation, figure/table generation, and SHA-256 artifact verification.
+  - NeurIPS / ICLR-standard scientific reproducibility guide (`paper/REPRODUCIBILITY.md`) detailing compiler optimization flags, seed reproducibility, system hardware inventory, and complete checklist responses.
+  - Cryptographic checksum tracking (`paper/manifest_checksums.json`) and automated reproduction execution report (`results/reproduction_report.json`).
+  - Maintained 100% test pass rate across 123 pytest tests, 70/70 CTest targets across GCC and Clang, with zero warnings and 100% ruff and mypy compliance.
+  - ADR-014: Research Paper, Publication Artifacts, and Scientific Reproducibility Package.
+
 

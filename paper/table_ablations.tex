@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\small
+\caption{\textbf{Systematic Component Ablation Study on Continuous Control (Pendulum).} Evaluated across multiple seeds with 200 interaction steps each. IQM trims the top and bottom 25\% of evaluation returns. Bootstrap CIs represent 95\% confidence intervals over $R=2000$ resamples. $P(\text{Full} > \text{Ablation})$ denotes the empirical probability of improvement.}
+\label{tab:ablation_results}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Method / Variant} & \textbf{IQM} $\uparrow$ & \textbf{95\% Bootstrap CI} & \textbf{Mean} $\pm$ \textbf{Std} & \textbf{Median} & $P(\text{Full} > \text{Var})$ & $p$-value \\
+\midrule
+\textbf{AURORA (Full)} & \textbf{-1446.27} & [-1593.41, -1298.99] & -1452.09 $\pm$ 321.20 & -1452.09 & --- & --- \\
+w/o Adaptive Horizon ($H=4$) & \textbf{-1462.02} & [-1586.36, -1337.21] & -1460.44 $\pm$ 282.23 & -1460.44 & 0.50 & 0.9151 \\
+w/o Dynamic Blending ($\eta=0.5$) & \textbf{-1391.11} & [-1527.22, -1266.92] & -1393.35 $\pm$ 286.89 & -1393.35 & 0.44 & 0.4581 \\
+w/o Pessimistic Penalty ($\beta=0$) & \textbf{-1446.27} & [-1593.41, -1298.99] & -1452.09 $\pm$ 321.20 & -1452.09 & 0.50 & 1.0000 \\
+\bottomrule
+\end{tabular}
+\end{table}

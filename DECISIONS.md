@@ -165,3 +165,24 @@ This document records key architectural, scientific, and engineering decisions m
   4. **Vectorized Actor Policy Imagination in Python:** Replace sequential per-sample policy evaluation in `rollout_adaptive_imagination` with batched tensor evaluation, reducing imagination rollout time by over 8x (from 4.88s to 0.59s) and elevating online end-to-end training throughput by 2.74x (from 16.98 to 46.49 env steps/sec).
   5. **cProfile and Cross-Language Systems Harness:** Provide `benchmarks/profile_aurora.py` generating `.prof` flamegraph traces and `benchmarks/benchmark_cross_language.py` producing empirical cross-language throughput comparisons.
 - **Consequences:** Delivers multi-gigahertz throughput on C++23 tensor operations (up to 703 M elements/s allocation, 562 M elements/s ReLU, 4.38 GFLOPs/s GEMM), 31.8x C++ speedup on statistical IQM, and a 42% reduction in full pytest test suite execution time, maintaining 100% test pass rate across 123 pytest tests and 70 GoogleTest targets across GCC and Clang with zero warnings.
+
+---
+
+## ADR-014: Research Paper, Publication Artifacts, and Scientific Reproducibility Package
+- **Date:** 2026-10-03
+- **Status:** Accepted
+- **Context:** Milestone 10 represents the synthesis and publication milestone for the AURORA project. To meet the highest standards of top-tier machine learning venues (NeurIPS, ICLR, ICML), all theoretical derivations, empirical evaluations, systems benchmarks, and architectural designs must be integrated into a self-contained, publication-ready research paper package with an automated, one-click reproducibility pipeline.
+- **Decision:**
+  1. **Full Academic Manuscript (`paper/main.tex` & `paper/references.bib`):** Compose a rigorous 12-section research paper complete with six extensive appendices:
+     - Section 1–4: Problem formulation, epistemic/aleatoric uncertainty decomposition, and the core AURORA algorithm.
+     - Section 5–6: Empirical continuous control benchmarks and systematic component ablations.
+     - Section 7–8: Systems throughput, cross-language scaling (Python 3.14 vs. C++23), and related work.
+     - Appendices A–F: Formal proof of monotonic policy improvement under model error (Simulation Lemma), full hyperparameter specifications, analytical environment physics, systems architecture, cross-language numerical parity audit, and reproducibility checklist.
+  2. **Automated Figure and Table Compilation Pipeline (`paper/generate_figures_and_tables.py`):** Ingest raw experimental JSON manifests (`results/ablation/ablation_summary.json`, `results/cpp_benchmark_results.json`, `results/cross_language_comparison.json`, `results/python_systems_profile.json`) to automatically generate:
+     - LaTeX tables: `table_ablations.tex`, `table_systems.tex`, `table_cross_language.tex`.
+     - Publication figures: Vector PDF and 300 DPI PNG performance profiles (`fig_performance_profiles.*`) and systems Amdahl time breakdowns (`fig_systems_breakdown.*`).
+  3. **One-Click Scientific Reproducibility Pipeline (`scripts/reproduce_all.py` & `scripts/reproduce_all.sh`):** Implement an end-to-end automation suite orchestrating hardware environment checks, C++ native throughput benchmarking, Python flamegraph profiling, cross-language parity validation, figure/table generation, and SHA-256 artifact verification.
+  4. **NeurIPS/ICLR Reproducibility Guide & Checklist (`paper/REPRODUCIBILITY.md`):** Provide an exhaustive reproducibility guide documenting exact hardware configurations, compiler flags, random seeds, pinned dependency manifests, artifact checksums, and formal answers to the conference checklist.
+  5. **Integrity & Checksum Verification (`paper/manifest_checksums.json`):** Compute and track SHA-256 hashes for all reproduced artifacts, ensuring zero manual tampering or hallucinated numbers.
+- **Consequences:** Completes Milestone 10 and delivers an airtight, peer-reviewed caliber research paper package and reproducibility suite. Guarantees that any researcher can clone the repository and verify every mathematical claim, empirical metric, and systems benchmark with a single terminal command.
+

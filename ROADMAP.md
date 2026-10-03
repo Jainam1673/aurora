@@ -128,11 +128,14 @@ This roadmap outlines the sequenced progression of AURORA from bootstrap to publ
   - Vectorized actor policy imagination evaluation in Python reducing rollout duration by 8.2x and boosting end-to-end throughput by 2.74x.
 - **Acceptance Criteria:** Quantifiable speedup and latency reduction without compromising numerical parity; 100% test pass rate across 123 pytest tests and 70 GoogleTest targets across GCC and Clang.
 
-### M10: Research Paper & Publication Artifacts (Active)
+### M10: Research Paper & Publication Artifacts (Completed)
 - **Goal:** Complete, publication-ready research paper package.
 - **Deliverables:**
-  - Full LaTeX manuscript with sections 1-18 and comprehensive appendices (`paper/`).
-  - Automated figure and table generation scripts pulling directly from raw results (`results/`).
-  - Reproducibility checklist and one-click reproduction scripts (`scripts/`).
-- **Acceptance Criteria:** Standalone compilation of camera-ready PDF and release bundle.
+  - Full LaTeX manuscript with sections 1-12 and comprehensive appendices A-F (`paper/main.tex`, `paper/references.bib`).
+  - Automated figure and table generation scripts pulling directly from raw manifests (`paper/generate_figures_and_tables.py`).
+  - Comprehensive reproducibility checklist (`paper/REPRODUCIBILITY.md`) adhering to NeurIPS/ICLR standards.
+  - One-click reproduction scripts (`scripts/reproduce_all.py`, `scripts/reproduce_all.sh`).
+  - Cryptographic checksum manifest (`paper/manifest_checksums.json`) and automated reproduction execution report (`results/reproduction_report.json`).
+- **Acceptance Criteria:** Standalone compilation of publication assets; 100% stage pass rate in automated reproduction runner; 100% test pass rate across pytest (123/123) and GoogleTest (70/70 on GCC and Clang).
+
 

@@ -1,0 +1,23 @@
+\begin{table}[t]
+\centering
+\small
+\caption{\textbf{Cross-Language Systems Throughput Comparison (Python 3.14 vs. C++23 Native).} Evaluated across identical computational tasks on the same host hardware.}
+\label{tab:cross_language_comparison}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Computational Workload} & \textbf{Unit} & \textbf{Python Mean} ($\mu$s) & \textbf{C++23 Mean} ($\mu$s) & \textbf{Speedup} ($S_{\text{C++}} / S_{\text{Py}}$) \\
+\midrule
+Contiguous Allocation \& Fill & elements/s & 316.61 & 437.45 & 0.72x \\
+Contiguous Elementwise Add & elements/s & 892.16 & 1447.76 & 0.62x \\
+Contiguous Elementwise Mul & elements/s & 937.94 & 1301.44 & 0.72x \\
+Contiguous ReLU Activation & elements/s & 622.76 & 1126.00 & 0.55x \\
+Full Scalar Sum Reduction & elements/s & 232.62 & 1128.49 & 0.21x \\
+Matmul 64x64x64 & FLOPs/s & 48.15 & 161.44 & 0.30x \\
+Matmul 128x128x128 & FLOPs/s & 86.44 & 1534.16 & 0.06x \\
+Matmul 256x256x256 & FLOPs/s & 847.71 & 11986.40 & 0.07x \\
+Forward Ensemble (B=64) & transitions/s & 3789.26 & 8383.29 & 0.45x \\
+IQM (N=100) & samples/s & 32.75 & 0.80 & \textbf{41.16x} \\
+Bootstrap CI (N=100, R=1000) & resamples/s & 57671.15 & 4255.60 & \textbf{13.55x} \\
+\bottomrule
+\end{tabular}
+\end{table}

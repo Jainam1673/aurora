@@ -105,9 +105,13 @@
 - [x] Vectorized actor policy imagination evaluation in `python/aurora/algorithm/aurora_agent.py` achieving 8.2x speedup on imagination and 2.74x end-to-end throughput boost.
 - [x] 100% test pass rate across pytest (123/123) and GoogleTest (70/70 on GCC and Clang) with zero warnings.
 
-## Milestone 10: Research Paper & Publication Package
-- [ ] Complete publication-ready LaTeX manuscript in `paper/main.tex` with comprehensive appendices.
-- [ ] Automate figure and table generation pipelines from raw experiment manifests (`results/`).
-- [ ] Assemble reproducibility package and self-contained replication scripts (`scripts/`).
-- [ ] Final end-to-end verification and camera-ready build artifact generation.
+## Milestone 10: Research Paper & Publication Package (Completed)
+- [x] Complete publication-ready LaTeX manuscript in `paper/main.tex` with comprehensive appendices A-F.
+- [x] Comprehensive BibTeX citation database in `paper/references.bib`.
+- [x] Automate figure and table generation pipelines from raw experiment manifests in `paper/generate_figures_and_tables.py`.
+- [x] Assemble reproducibility package and self-contained one-click replication scripts (`scripts/reproduce_all.py`, `scripts/reproduce_all.sh`).
+- [x] NeurIPS/ICLR-standard reproducibility guide and checklist in `paper/REPRODUCIBILITY.md`.
+- [x] SHA-256 cryptographic checksums manifest in `paper/manifest_checksums.json` and verification report in `results/reproduction_report.json`.
+- [x] Final end-to-end verification (123 pytest tests passed, 70/70 CTest targets passed on GCC/Clang, 0 ruff errors, 0 mypy errors).
+
 

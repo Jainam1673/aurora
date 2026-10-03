@@ -1,0 +1,31 @@
+\begin{table}[t]
+\centering
+\small
+\caption{\textbf{Native C++23 High-Throughput Engine Microbenchmarks.} Evaluated with GCC 16.2.1 (-O3 -march=native) on an Intel Core i5-8265U CPU (AVX2/FMA). Timings report mean, median ($p_{50}$), and 99th-percentile ($p_{99}$) latencies over $\ge 20$ trials.}
+\label{tab:native_systems_performance}
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Subsystem} & \textbf{Benchmark Workload} & \textbf{Mean} ($\mu$s) & $p_{50}$ ($\mu$s) & $p_{99}$ ($\mu$s) & \textbf{Throughput} \\
+\midrule
+Tensor & Contiguous Allocation \& Fill & 437.45 & 369.01 & 839.10 & 1.14 G elements/s \\
+Tensor & Contiguous Elementwise Add & 1447.76 & 1181.02 & 2344.79 & 345.36 M elements/s \\
+Tensor & Contiguous Elementwise Mul & 1301.44 & 1156.79 & 1647.82 & 384.19 M elements/s \\
+Tensor & Contiguous ReLU Activation & 1126.00 & 943.22 & 2305.93 & 444.05 M elements/s \\
+Tensor & Contiguous GELU Activation & 44253.20 & 43786.90 & 50977.40 & 11.30 M elements/s \\
+Tensor & Contiguous SiLU Activation & 7824.41 & 6832.74 & 12282.00 & 63.90 M elements/s \\
+Tensor & Full Scalar Sum Reduction & 1128.49 & 1037.17 & 1998.37 & 443.07 M elements/s \\
+GEMM (Compute) & Matmul 64x64x64 & 161.44 & 157.34 & 171.71 & 3.25 G FLOPs/s \\
+GEMM (Compute) & Matmul 128x128x128 & 1534.16 & 1331.47 & 2532.14 & 2.73 G FLOPs/s \\
+GEMM (Compute) & Matmul 256x256x256 & 11986.40 & 11324.60 & 15098.80 & 2.80 G FLOPs/s \\
+Dynamics Ensemble & Forward Ensemble (B=1) & 4717.83 & 4060.44 & 7770.15 & 1.06 k transitions/s \\
+Dynamics Ensemble & Forward Ensemble (B=16) & 6102.40 & 5986.90 & 7338.69 & 13.11 k transitions/s \\
+Dynamics Ensemble & Forward Ensemble (B=64) & 8383.29 & 8220.90 & 9622.13 & 38.17 k transitions/s \\
+Imagination & Rollout Trajectories (N=32, H=1) & 78931.60 & 91694.00 & 106517.00 & 405.4 transitions/s \\
+Imagination & Rollout Trajectories (N=32, H=4) & 221674.00 & 214998.00 & 255830.00 & 577.4 transitions/s \\
+Imagination & Rollout Trajectories (N=32, H=8) & 353849.00 & 331918.00 & 422856.00 & 723.5 transitions/s \\
+Imagination & Rollout Trajectories (N=32, H=12) & 476935.00 & 465124.00 & 503508.00 & 805.1 transitions/s \\
+Statistics & IQM (N=100) & 0.80 & 0.79 & 0.95 & 125.67 M samples/s \\
+Statistics & Bootstrap CI (N=100, R=1000) & 4255.60 & 4219.30 & 4611.43 & 23.50 M resamples/s \\
+\bottomrule
+\end{tabular}
+\end{table}

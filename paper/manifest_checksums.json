@@ -1,0 +1,18 @@
+{
+  "timestamp_utc": "2026-10-03T16:31:43Z",
+  "checksums": {
+    "paper/main.tex": "675c4df83e6a7ece8905c05ddbf5f2accc196ba96e477493c65d16ccf4a5ecf2",
+    "paper/references.bib": "d7d03eebc0c7c4a14ab5473574a764c5a5baba8a1ddcd83b684623d356d573ff",
+    "paper/table_ablations.tex": "d9a285a8ce256487f1ec70f806a4c92c9287e80d84be0d13e8d3d9c48edcecd3",
+    "paper/table_systems.tex": "9788b694b3b8883c4da455be006aa2701c1827d2e9ebeca1217485d9d6875280",
+    "paper/table_cross_language.tex": "9aced0fd1720ca20850e8719ac94c95e5b6c971cd89ebb5da9b214f3cd4b3b7e",
+    "paper/fig_performance_profiles.pdf": "4254647bf84f117bf0a308c30d4ac6681a7dec86936f8a642a64cb1ae9020ec3",
+    "paper/fig_performance_profiles.png": "cd89017fb7555f1d067fe637cb729ae325b7db5c7fd7d5b771de2217166cf4de",
+    "paper/fig_systems_breakdown.pdf": "7e5a0c5389ac8ecf0f8346ebae7e69143181f2fa676956c50a9b989bffae9bba",
+    "paper/fig_systems_breakdown.png": "477173d61940d57c5a19bf49de535585927e0af8a88f320536828fac6405b546",
+    "results/ablation/ablation_summary.json": "79d24b7fbe344b916c0ea5324d7df2b7e28b5947d5cf68d46898752abc47e5ac",
+    "results/cpp_benchmark_results.json": "d6576560064cb40ba8261f96add587548233fbd0127d80b9f312a2275ab5a9ed",
+    "results/python_systems_profile.json": "73be526f5f134c131813f98ea0f03eca85463898c842d9cf13cf4ce48e059730",
+    "results/cross_language_comparison.json": "e5c0e72940cb5fdcbb44831729f3615e2e55c1b3c1b698ebc9efa9d836b5370f"
+  }
+}
