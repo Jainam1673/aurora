@@ -80,13 +80,13 @@ Addressing these issues through dynamic uncertainty calibration is essential for
 ## Key Contributions
 
 ### Algorithmic Mechanisms
-1. **Adaptive Horizon Scheduling:** Individual imagination trajectories are terminated when instantaneous epistemic disagreement exceeds a dynamic threshold $\tau_t = \tau_{\text{base}} \exp(-\kappa \mathcal{L}_{\text{val}})$ or when the cumulative discounted uncertainty exceeds a budget $B_{\max}$.
-2. **Dynamic Experience Blending:** The synthetic-to-real replay sampling ratio $\eta_t \in [0, \eta_{\max}]$ decays gracefully toward zero when recent rollout uncertainty surges, falling back to model-free learning when the model is untrusted.
-3. **Pessimistic Value Regularization:** Policy evaluation incorporates an epistemic variance penalty $\tilde{Q}(s, a) = \min_j Q_j(s, a) - \beta_{\text{pess}} u_{\text{epi}}(s, a)$ to discourage optimistic extrapolation.
+1. **Adaptive Horizon Scheduling:** Individual imagination trajectories are terminated when instantaneous epistemic disagreement exceeds a dynamic validation-decayed threshold $\tau_t$ or when the cumulative discounted uncertainty budget is exhausted ($B_{\max}$).
+2. **Dynamic Experience Blending:** The synthetic-to-real replay sampling ratio $\eta_t$ decays gracefully toward zero when recent rollout uncertainty surges, falling back to model-free learning when the model is untrusted.
+3. **Pessimistic Value Regularization:** Policy evaluation incorporates an epistemic variance penalty $\tilde{Q}(s, a) = \min_j Q_j(s, a) - \beta u(s, a)$ to discourage optimistic extrapolation.
 
 ### Infrastructure & Systems
 4. **Dual-Peer C++23 / Python 3.14 Architecture:** Complete from-scratch mathematical cores in both languages with zero third-party ML framework dependencies (no PyTorch, TensorFlow, or JAX).
-5. **Rigorous Evaluation Infrastructure:** Implementation of the Agarwal et al. (2021) statistical evaluation protocol, including Interquartile Mean (IQM), stratified bootstrap confidence intervals ($R=2000$), probability of improvement, and automated JSON run manifests.
+5. **Rigorous Evaluation Infrastructure:** Implementation of the Agarwal et al. (2021) statistical evaluation protocol, including Interquartile Mean (IQM), stratified bootstrap confidence intervals ($R = 2000$), probability of improvement, and automated JSON run manifests.
 6. **One-Click Reproducibility Pipeline:** Standalone automation scripts verifying hardware environment, building native binaries, compiling figures/tables, and checking SHA-256 artifact checksums.
 
 ---
@@ -104,7 +104,7 @@ Addressing these issues through dynamic uncertainty calibration is essential for
                  └───────────────────┬───────────────────┘
                                      │
                              Shared Semantics
-                     (Numerical Parity < 10⁻¹⁰)
+                     (Numerical Parity < 1e-10)
                                      │
         ┌────────────────────────────┼────────────────────────────┐
         ▼                            ▼                            ▼
@@ -128,36 +128,95 @@ Addressing these issues through dynamic uncertainty calibration is essential for
 ## Algorithm Formulation
 
 ### 1. Dynamics Ensemble & Uncertainty Decomposition
-Given continuous state $s \in \mathcal{S}$ and action $a \in \mathcal{A}$, an ensemble of $E$ probabilistic neural networks $\{\hat{f}_{\theta_i}\}_{i=1}^E$ predicts state transitions $\hat{s}' = s + \mu_{\Delta s}^{(i)}(s, a)$ and rewards $\hat{r} = \mu_r^{(i)}(s, a)$. Total predictive variance decomposes into aleatoric and epistemic components:
-$$\sigma_{\text{tot}}^2(s, a) = \underbrace{\frac{1}{E}\sum_{i=1}^E \sigma_{\theta_i}^2(s, a)}_{\text{Aleatoric Uncertainty (Noise)}} + \underbrace{\frac{1}{E}\sum_{i=1}^E \left(\mu_{\theta_i}(s, a) - \bar{\mu}(s, a)\right)^2}_{\text{Epistemic Disagreement } u_{\text{epi}}(s, a)}$$
-where $\bar{\mu}(s, a) = \frac{1}{E}\sum_{i=1}^E \mu_{\theta_i}(s, a)$. The scalar epistemic disagreement $u_{\text{epi}}(s, a)$ used for control decisions is evaluated as the maximum dimension-wise variance:
-$$u_{\text{epi}}(s, a) = \max_{k \in \{1, \dots, d_s\}} \left[ \frac{1}{E}\sum_{i=1}^E \left(\mu_{k}^{(i)}(s, a) - \bar{\mu}_k(s, a)\right)^2 \right]$$
+
+Given continuous state $s$ and action $a$, an ensemble of $E$ probabilistic dynamics models predicts next-state transitions and scalar rewards:
+
+$$
+\hat{s}_{t+1} = s_t + \mu_i(s_t, a_t), \quad \hat{r}_t = r_i(s_t, a_t)
+$$
+
+Total predictive variance across ensemble members decomposes into aleatoric (data noise) and epistemic (model disagreement) components:
+
+$$
+\sigma_{\text{tot}}^2(s, a) = \sigma_{\text{ale}}^2(s, a) + \sigma_{\text{epi}}^2(s, a)
+$$
+
+where aleatoric variance is the mean predicted variance across ensemble members:
+
+$$
+\sigma_{\text{ale}}^2(s, a) = \frac{1}{E} \sum_{i=1}^E \sigma_i^2(s, a)
+$$
+
+and epistemic variance is the disagreement across ensemble predictions:
+
+$$
+\sigma_{\text{epi}}^2(s, a) = \frac{1}{E} \sum_{i=1}^E \left(\mu_i(s, a) - \bar{\mu}(s, a)\right)^2, \quad \text{with} \quad \bar{\mu}(s, a) = \frac{1}{E}\sum_{i=1}^E \mu_i(s, a)
+$$
+
+The scalar epistemic disagreement $u_{\text{epi}}(s, a)$ used for control decisions is evaluated as the maximum dimension-wise variance across state dimensions $k \in \{1, \dots, d_s\}$:
+
+$$
+u_{\text{epi}}(s, a) = \max_{k \in \{1, \dots, d_s\}} \frac{1}{E} \sum_{i=1}^E \left(\mu_k^{(i)}(s, a) - \bar{\mu}_k(s, a)\right)^2
+$$
 
 ### 2. Adaptive Horizon Truncation
-Rollout branch $b$ terminates at step $h$ when either the instantaneous disagreement exceeds a dynamic threshold or the cumulative discounted uncertainty budget is exhausted:
-$$u_{\text{epi}}(s_h, a_h) > \tau_t \quad \text{or} \quad \sum_{k=0}^h \gamma^k u_{\text{epi}}(s_k, a_k) > B_{\max}$$
+
+A rollout trajectory branch terminates at step $h$ when either instantaneous epistemic uncertainty exceeds the dynamic threshold or the cumulative discounted uncertainty budget is exhausted:
+
+$$
+u_{\text{epi}}(s_h, a_h) > \tau_t \quad \text{or} \quad \sum_{k=0}^h \gamma^k u_{\text{epi}}(s_k, a_k) > B_{\max}
+$$
+
 where the threshold $\tau_t$ adapts dynamically to model validation loss $\mathcal{L}_{\text{val}}$:
-$$\tau_t = \tau_{\text{base}} \exp\left(-\kappa \cdot \mathcal{L}_{\text{val}}\right)$$
+
+$$
+\tau_t = \tau_{\text{base}} \exp\left(-\kappa \cdot \mathcal{L}_{\text{val}}\right)
+$$
 
 ### 3. Dynamic Experience Blending
+
 The synthetic replay fraction $\eta_t \in [0, \eta_{\max}]$ is dynamically computed from recent mean imagination uncertainty $\bar{u}_t$ and smoothed with momentum parameter $\rho \in [0, 1)$:
-$$\eta_t^{\text{raw}} = \eta_{\max}\left[1 - \min\left(1, \frac{\bar{u}_t}{u_{\text{target}}}\right)\right], \quad \eta_t = \rho \eta_{t-1} + (1 - \rho)\eta_t^{\text{raw}}$$
-where $\bar{u}_t = \frac{1}{B} \sum_{b=1}^B \frac{1}{H_b} \sum_{h=0}^{H_b-1} u_{\text{epi}}(s_h^{(b)}, a_h^{(b)})$.
+
+$$
+\eta_t^{\text{raw}} = \eta_{\max} \left[1 - \min\left(1, \frac{\bar{u}_t}{u_{\text{target}}}\right)\right]
+$$
+
+$$
+\eta_t = \rho \eta_{t-1} + (1 - \rho)\eta_t^{\text{raw}}
+$$
+
+where $\bar{u}_t$ is the mean epistemic uncertainty across all steps and branches of the recent imagination batch:
+
+$$
+\bar{u}_t = \frac{1}{B} \sum_{b=1}^B \frac{1}{H_b} \sum_{h=0}^{H_b-1} u_{\text{epi}}(s_h^{(b)}, a_h^{(b)})
+$$
 
 ### 4. Pessimistic Value Formulation
+
 To prevent policy exploitation of optimistic model errors, policy optimization evaluates actions against a penalized lower-bound critic:
-$$\tilde{Q}(s, a) = \min_{j \in \{1, 2\}} Q_{\psi_j}(s, a) - \beta_{\text{pess}} \cdot u_{\text{epi}}(s, a)$$
+
+$$
+\tilde{Q}(s, a) = \min_{j \in \{1, 2\}} Q_{\psi_j}(s, a) - \beta_{\text{pess}} \cdot u_{\text{epi}}(s, a)
+$$
+
 with the actor objective:
-$$\mathcal{J}(\phi) = \mathbb{E}_{s \sim \mathcal{D},\, a \sim \pi_\phi} \left[ \tilde{Q}(s, a) - \alpha \log \pi_\phi(a \mid s) \right]$$
+
+$$
+\mathcal{J}(\phi) = \mathbb{E}_{s \sim \mathcal{D}, a \sim \pi_\phi} \left[ \tilde{Q}(s, a) - \alpha \log \pi_\phi(a \mid s) \right]
+$$
 
 ---
 
 ## Theoretical Analysis
 
-The accompanying manuscript (`paper/main.tex`, Section 5 and Appendix A) presents a model-error analysis based on the Simulation Lemma. It formalizes conditions under which bounding accumulated rollout discrepancy via dynamic truncation and pessimistic regularizers supports monotonic policy improvement bounds under bounded model error.
+The accompanying manuscript (`paper/main.tex`, Section 5 and Appendix A) presents a model-error analysis based on the Simulation Lemma. It formalizes conditions under which bounding accumulated rollout discrepancy via dynamic truncation and pessimistic regularizers supports monotonic policy improvement bounds under bounded model error:
+
+$$
+D_{\text{TV}}(\mathcal{P}, \hat{\mathcal{P}}) \le C_u \cdot u_{\text{epi}}(s, a)
+$$
 
 > [!NOTE]
-> The theoretical guarantee relies on the assumption that ensemble epistemic variance upper-bounds total variation divergence between true and learned dynamics ($D_{\text{TV}}(\mathcal{P}, \hat{\mathcal{P}}) \le C_u \cdot u_{\text{epi}}(s, a)$). In finite deep neural networks, this represents an empirical modeling hypothesis rather than an unconditional mathematical fact.
+> The theoretical guarantee relies on the assumption that ensemble epistemic variance upper-bounds total variation divergence between true and learned dynamics. In finite deep neural networks, this represents an empirical modeling hypothesis rather than an unconditional mathematical fact.
 
 ---
 
@@ -167,15 +226,15 @@ AURORA implements both a Python 3.14 reference library and a C++23 native system
 
 | Subsystem | Python 3.14 Reference | C++23 Systems Core | Verified Numerical Parity |
 |---|:---:|:---:|:---:|
-| **Tensor Abstraction** | Strided NumPy backend | Contiguous heap memory, views, C-strides | $< 10^{-10}$ |
-| **Automatic Differentiation** | Dynamic tape DAG VJP | Polymorphic DAG graph nodes | $< 10^{-10}$ |
-| **Neural Primitives** | `Linear`, `LayerNorm`, `RMSNorm` | `Linear`, `LayerNorm`, `RMSNorm` | $< 10^{-10}$ |
-| **Optimizers** | `SGD`, `Adam`, `AdamW`, Schedulers | Vectorized `SGD`, `AdamW`, Schedulers | $< 10^{-10}$ |
-| **Sequence Architecture** | Scaled Dot-Product, RoPE, Decoder | C++23 Attention, RoPE, Decoder | $< 10^{-10}$ |
-| **Reinforcement Learning** | `Normal`, `TanhNormal`, GAE buffer | `Normal`, `TanhNormal`, GAE buffer | $< 10^{-10}$ |
-| **Dynamics Ensemble** | Gaussian NLL, TS1 Trajectory Sampling | Parallel ensemble inference | $< 10^{-10}$ |
-| **AURORA Controllers** | Adaptive Horizon & Blending | `AdaptiveHorizonScheduler`, `DynamicBlending` | $< 10^{-10}$ |
-| **Statistical Evaluation** | IQM, Bootstrap CIs, Profiles | High-speed IQM & Bootstrap CI kernels | $< 10^{-10}$ |
+| **Tensor Abstraction** | Strided NumPy backend | Contiguous heap memory, views, C-strides | < 1e-10 |
+| **Automatic Differentiation** | Dynamic tape DAG VJP | Polymorphic DAG graph nodes | < 1e-10 |
+| **Neural Primitives** | `Linear`, `LayerNorm`, `RMSNorm` | `Linear`, `LayerNorm`, `RMSNorm` | < 1e-10 |
+| **Optimizers** | `SGD`, `Adam`, `AdamW`, Schedulers | Vectorized `SGD`, `AdamW`, Schedulers | < 1e-10 |
+| **Sequence Architecture** | Scaled Dot-Product, RoPE, Decoder | C++23 Attention, RoPE, Decoder | < 1e-10 |
+| **Reinforcement Learning** | `Normal`, `TanhNormal`, GAE buffer | `Normal`, `TanhNormal`, GAE buffer | < 1e-10 |
+| **Dynamics Ensemble** | Gaussian NLL, TS1 Trajectory Sampling | Parallel ensemble inference | < 1e-10 |
+| **AURORA Controllers** | Adaptive Horizon & Blending | `AdaptiveHorizonScheduler`, `DynamicBlending` | < 1e-10 |
+| **Statistical Evaluation** | IQM, Bootstrap CIs, Profiles | High-speed IQM & Bootstrap CI kernels | < 1e-10 |
 
 ---
 
@@ -186,12 +245,12 @@ All empirical numbers below originate from actual generated manifests and benchm
 ### 1. Component Ablation Study (Continuous Control — Pendulum)
 *Evaluated over multiple random seeds (30 evaluation episodes per condition, 300 environment steps) from `results/ablation/ablation_summary.json`:*
 
-| Method / Variant | IQM Return $\uparrow$ | 95% Bootstrap CI | Mean $\pm$ Std | $P(\text{Full} > \text{Variant})$ | Welch $p$-value |
+| Method / Variant | IQM Return (↑) | 95% Bootstrap CI | Mean ± Std | P(Full > Variant) | Welch p-value |
 |:---|---:|:---:|:---:|:---:|:---:|
-| **AURORA (Full)** | **-1446.27** | [-1593.41, -1298.99] | -1452.09 $\pm$ 321.20 | — | — |
-| w/o Adaptive Horizon ($H = 4$) | -1462.02 | [-1586.36, -1337.21] | -1460.44 $\pm$ 282.23 | 0.50 | 0.9151 |
-| w/o Dynamic Blending ($\eta = 0.5$) | -1391.11 | [-1527.22, -1266.92] | -1393.35 $\pm$ 286.89 | 0.44 | 0.4581 |
-| w/o Pessimistic Penalty ($\beta_{\text{pess}} = 0$) | -1446.27 | [-1593.41, -1298.99] | -1452.09 $\pm$ 321.20 | 0.50 | 1.0000 |
+| **AURORA (Full)** | **-1446.27** | [-1593.41, -1298.99] | -1452.09 ± 321.20 | — | — |
+| w/o Adaptive Horizon (H = 4) | -1462.02 | [-1586.36, -1337.21] | -1460.44 ± 282.23 | 0.50 | 0.9151 |
+| w/o Dynamic Blending (η = 0.5) | -1391.11 | [-1527.22, -1266.92] | -1393.35 ± 286.89 | 0.44 | 0.4581 |
+| w/o Pessimistic Penalty (β = 0) | -1446.27 | [-1593.41, -1298.99] | -1452.09 ± 321.20 | 0.50 | 1.0000 |
 
 > [!IMPORTANT]
 > **Audit Finding on Ablation Results:** As documented in our scientific audit (`research_audit/FINAL_AUDIT.md`), at short training horizons (300 steps), differences between variants are not statistically significant ($p > 0.45$). In particular, `No Dynamic Blending` with fixed $\eta = 0.5$ performed competitively with Full AURORA, and `No Pessimism` scored identically due to a gradient detachment in the actor loss. We explicitly document this rather than reporting synthetic numbers.
@@ -199,26 +258,26 @@ All empirical numbers below originate from actual generated manifests and benchm
 ### 2. C++23 Native Systems Throughput
 *Measured on an Intel Core i5-8265U CPU (AVX2/FMA enabled) with GCC 16.2.1 (`-O3 -march=native`) via `benchmarks/cpp/benchmark_throughput.cpp`:*
 
-| Subsystem | Workload Description | Mean Latency | Median ($p_{50}$) | Throughput |
+| Subsystem | Workload Description | Mean Latency | Median (p50) | Throughput |
 |---|---|---:|---:|---:|
-| **Tensor Memory** | Contiguous Allocation & Fill | $437.45\ \mu\text{s}$ | $369.02\ \mu\text{s}$ | 1.14 G elements/s |
-| **Tensor Compute** | Contiguous Elementwise Add | $1447.76\ \mu\text{s}$ | $1181.02\ \mu\text{s}$ | 345.36 M elements/s |
-| **Tensor Activation** | Contiguous ReLU Activation | $1126.00\ \mu\text{s}$ | $943.22\ \mu\text{s}$ | 444.05 M elements/s |
-| **GEMM Compute** | Matmul $64 \times 64 \times 64$ | $161.44\ \mu\text{s}$ | $157.34\ \mu\text{s}$ | 3.25 GFLOP/s |
-| **GEMM Compute** | Matmul $128 \times 128 \times 128$ | $1534.16\ \mu\text{s}$ | $1331.47\ \mu\text{s}$ | 2.73 GFLOP/s |
-| **Dynamics Ensemble** | Forward Ensemble ($B = 64, E = 5$) | $8383.29\ \mu\text{s}$ | $8220.90\ \mu\text{s}$ | 38,171 transitions/s |
-| **Statistical Kernel** | IQM Evaluation ($N = 100$) | $0.80\ \mu\text{s}$ | $0.79\ \mu\text{s}$ | 125.67 M samples/s |
-| **Statistical Kernel** | Bootstrap CI ($N = 100, R = 1000$) | $4255.60\ \mu\text{s}$ | $4219.30\ \mu\text{s}$ | 23.50 M resamples/s |
+| **Tensor Memory** | Contiguous Allocation & Fill | 437.45 µs | 369.02 µs | 1.14 G elements/s |
+| **Tensor Compute** | Contiguous Elementwise Add | 1447.76 µs | 1181.02 µs | 345.36 M elements/s |
+| **Tensor Activation** | Contiguous ReLU Activation | 1126.00 µs | 943.22 µs | 444.05 M elements/s |
+| **GEMM Compute** | Matmul 64 × 64 × 64 | 161.44 µs | 157.34 µs | 3.25 GFLOP/s |
+| **GEMM Compute** | Matmul 128 × 128 × 128 | 1534.16 µs | 1331.47 µs | 2.73 GFLOP/s |
+| **Dynamics Ensemble** | Forward Ensemble (B = 64, E = 5) | 8383.29 µs | 8220.90 µs | 38,171 transitions/s |
+| **Statistical Kernel** | IQM Evaluation (N = 100) | 0.80 µs | 0.79 µs | 125.67 M samples/s |
+| **Statistical Kernel** | Bootstrap CI (N = 100, R = 1000) | 4255.60 µs | 4219.30 µs | 23.50 M resamples/s |
 
 ### 3. Cross-Language Parity & Speedup Comparison
 *Comparing Python 3.14 reference vs. C++23 native implementation (`results/cross_language_comparison.json`):*
 
-| Computational Workload | Unit | Python Mean ($\mu\text{s}$) | C++23 Mean ($\mu\text{s}$) | C++ Speedup |
+| Computational Workload | Unit | Python Mean (µs) | C++23 Mean (µs) | C++ Speedup |
 |---|---|---:|---:|---:|
-| **Statistical IQM ($N = 100$)** | samples/s | 32.75 | 0.80 | **41.16×** |
-| **Bootstrap CI ($N = 100, R = 1000$)** | resamples/s | 57,671.15 | 4,255.60 | **13.55×** |
+| **Statistical IQM (N = 100)** | samples/s | 32.75 | 0.80 | **41.16×** |
+| **Bootstrap CI (N = 100, R = 1000)** | resamples/s | 57,671.15 | 4,255.60 | **13.55×** |
 | **Contiguous Allocation & Fill** | elements/s | 316.61 | 437.45 | 0.72× |
-| **GEMM Matmul ($64 \times 64 \times 64$)** | FLOP/s | 48.15 | 161.44 | 0.30× (vs BLAS) |
+| **GEMM Matmul (64 × 64 × 64)** | FLOP/s | 48.15 | 161.44 | 0.30× (vs BLAS) |
 
 *(Note: Python linear algebra calls out to optimized NumPy C/OpenBLAS routines, while custom statistical and rollout loops benefit heavily from C++23 native compilation.)*
 
@@ -341,7 +400,7 @@ For deeper architectural specifications and decision rationale, see [`ARCHITECTU
 In the spirit of transparent open science, we explicitly document the current empirical and algorithmic boundaries of AURORA:
 
 1. **Short-Horizon Statistical Significance:** At short training horizons (300 environment steps on Inverted Pendulum), variance between seeds remains high, and differences between full AURORA and its ablations do not yet achieve statistical significance ($p > 0.05$).
-2. **Actor Pessimism Gradient Flow:** In the current implementation, the pessimism penalty $\beta_{\text{pess}} \cdot u_{\text{epi}}(s, a)$ is evaluated as a detached constant in the actor loss. Connecting autograd gradients or applying pessimism directly to reward targets (as in MOPO) is required for $\beta_{\text{pess}}$ to influence policy improvement dynamically.
+2. **Actor Pessimism Gradient Flow:** In the current implementation, the pessimism penalty `\beta_{\text{pess}} \cdot u_{\text{epi}}(s, a)` is evaluated as a detached constant in the actor loss. Connecting autograd gradients or applying pessimism directly to reward targets (as in MOPO) is required for `\beta_{\text{pess}}` to influence policy improvement dynamically.
 3. **Task Scope:** Systematic benchmarking in the current release is focused on continuous control dynamics (Pendulum). Evaluating across visual latent states (e.g. via RSSM) and contact-rich environments represents active future research.
 4. **Computational Cost of Ensembles:** Training and evaluating an ensemble of $E = 5$ deep neural networks scales computational cost linearly compared to single-model methods.
 
