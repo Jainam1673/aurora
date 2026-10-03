@@ -12,12 +12,12 @@ This roadmap outlines the sequenced progression of AURORA from bootstrap to publ
 | **M1** | Numerical Core & Autograd Tape | **Completed** | `Tensor`, reverse-mode autograd, gradient checks |
 | **M2** | Neural Network Primitives & Optimizers | **Completed** | `Linear`, `MLP`, `LayerNorm`, `AdamW`, checkpointing |
 | **M3** | Transformer Engine & Attention | **Completed** | Causal MHA, Stacked Transformer, parity & benchmarks |
-| **M4** | Reinforcement Learning Primitives | **Active** | Bandits, TD($\lambda$), GAE, PPO, SAC |
-| **M5** | Latent World Models & Imagination | Queued | Encoder, latent dynamics (MLP/RSSM/Transformer) |
-| **M6** | MBRL Research Reproduction Suite | Queued | PlaNet, DreamerV1-V3, TD-MPC2, MuZero |
-| **M7** | Uncertainty Estimation & Calibration | Queued | Ensembles, calibration curves, error rank correlation |
-| **M8** | AURORA Algorithm Implementation | Queued | Adaptive horizon $H_t$, pessimistic planning, active data |
-| **M9** | Benchmarking & Systems Analysis | Queued | Multi-seed IQM, ablation studies, throughput profiling |
+| **M4** | Reinforcement Learning Primitives | **Completed** | Bandits, TD($\lambda$), GAE, PPO, SAC |
+| **M5** | Latent World Models & Imagination | **Completed** | Ensemble dynamics, uncertainty, RSSM, rollout engine |
+| **M6** | MBRL Research Reproduction Suite | **Completed** | MBPO, Dreamer, TD-MPC, MuZero, Decision Transformer |
+| **M7** | AURORA Novel Algorithm | **Active** | Adaptive horizon $H^*(s)$, dynamic blending, calibrated RL |
+| **M8** | Uncertainty Calibration & Active Acquisition | Queued | Deep ensemble calibration, error rank correlation |
+| **M9** | Scientific Benchmarking & Systems Analysis | Queued | Multi-seed IQM, ablation studies, throughput profiling |
 | **M10** | Publication-Grade Paper & Artifacts | Queued | LaTeX paper, appendices, reproducible manifests |
 
 ---
@@ -79,12 +79,19 @@ This roadmap outlines the sequenced progression of AURORA from bootstrap to publ
   - Dual-language parity test suite verifying $< 10^{-10}$ error across all world model operations.
 - **Acceptance Criteria:** 100% test pass rate across pytest (96/96) and GoogleTest (56/56 on GCC and Clang).
 
-### M6: MBRL Research Reproduction Suite
-- **Goal:** Reproduce conceptual foundations of leading MBRL architectures.
+### M6: MBRL Research Reproduction Suite (Completed)
+- **Goal:** Reproduce conceptual foundations of leading MBRL architectures from first principles.
 - **Deliverables:**
-  - Reproductions of Dreamer (latent imagination), TD-MPC (latent trajectory optimization), MuZero (MCTS in latent space), Decision Transformer.
-  - Documented deviations and compute conditions in `reproductions/`.
-- **Acceptance Criteria:** Reproductions match published conceptual dynamics and score baselines.
+  - Full mathematical derivations in `docs/mathematics/reproductions.md`.
+  - MBPO: $k$-step branched rollouts with hybrid real/synthetic replay buffer and SAC.
+  - Dreamer: RSSM latent imagination, analytical $\lambda$-returns, latent actor-critic.
+  - TD-MPC: non-reconstructive task latent dynamics, CEM trajectory optimization, terminal Q bootstrapping.
+  - MuZero: representation/dynamics/prediction decomposition, PUCT MCTS with min-max normalization.
+  - Decision Transformer: Return-to-Go (RTG) conditioned autoregressive sequence modeling.
+  - C++23 native peers: `compute_lambda_returns`, `CEMPlanner`, `PUCTPlanner`, and `MBPOBufferManager`.
+  - Autograd and tensor core extensions (`PowBackward`, `__pow__`, `stack()`, and `dim` argument support).
+  - Cross-language numerical parity suite verifying $< 10^{-10}$ error.
+- **Acceptance Criteria:** 100% test pass rate across pytest (103/103) and GoogleTest (60/60 on GCC and Clang).
 
 ### M7: Uncertainty Module & Calibration
 - **Goal:** Quantify and calibrate epistemic and aleatoric world model uncertainty.

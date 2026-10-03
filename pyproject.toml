@@ -58,7 +58,7 @@ ignore = []
 minversion = "8.0"
 addopts = "-ra -q --strict-markers"
 testpaths = ["tests/python", "tests/parity"]
-pythonpath = ["python"]
+pythonpath = ["python", "."]
 
 [tool.mypy]
 python_version = "3.14"

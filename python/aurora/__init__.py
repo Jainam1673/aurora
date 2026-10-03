@@ -7,7 +7,7 @@ from aurora import distributions, environments, nn, optim, rl, world_model
 from aurora.checkpoint import load_checkpoint, save_checkpoint
 from aurora.core import AuroraInfo, get_system_info
 from aurora.gradcheck import gradcheck
-from aurora.tensor import Tensor, arange, ones, randn, tensor, zeros
+from aurora.tensor import Tensor, arange, ones, randn, stack, tensor, zeros
 from aurora.version import __version__
 
 __all__ = [
@@ -26,6 +26,7 @@ __all__ = [
     "randn",
     "rl",
     "save_checkpoint",
+    "stack",
     "tensor",
     "world_model",
     "zeros",

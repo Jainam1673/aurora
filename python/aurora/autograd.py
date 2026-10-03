@@ -222,6 +222,20 @@ class SqrtBackward(Function):
         return (gx,)
 
 
+class PowBackward(Function):
+    def __init__(self, x: Tensor, exponent: float | int) -> None:
+        super().__init__(x)
+        self.exponent = float(exponent)
+
+    def backward(self, grad_output: np.ndarray) -> tuple[np.ndarray | None, ...]:
+        (x,) = self.inputs
+        if not x.requires_grad:
+            return (None,)
+        p = self.exponent
+        gx = grad_output * (p * (x.data ** (p - 1.0)))
+        return (gx,)
+
+
 class ReLUBackward(Function):
     def backward(self, grad_output: np.ndarray) -> tuple[np.ndarray | None, ...]:
         (x,) = self.inputs

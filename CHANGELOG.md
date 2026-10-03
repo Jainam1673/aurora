@@ -69,3 +69,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - C++23 GoogleTest suite (`tests/cpp/test_world_model.cpp`: 9/9 passed, 56/56 repo total on GCC and Clang).
   - Cross-language numerical parity suite (`tests/parity/test_world_model_parity.py`: 4/4 passed, 24/24 parity total) asserting $< 10^{-10}$ error on `sigmoid`, Gaussian NLL loss, uncertainty metrics, and analytical KL divergence.
   - ADR-009: Latent World Models, Deep Probabilistic Ensembles, and Uncertainty Calibration.
+- **M6 MBRL Research Reproduction Suite & Policy Optimization**:
+  - Theoretical derivations in `docs/mathematics/reproductions.md` (monotonic policy improvement bounds, generalized $\lambda$-returns, task latent trajectory optimization, PUCT MCTS, and RTG autoregressive sequence modeling).
+  - Reproduction Suite Root: `reproductions/README.md` and `reproductions/__init__.py`.
+  - MBPO reproduction (`reproductions/mbpo/algorithm.md`, `reproductions/mbpo/mbpo.py`): branched ensemble rollouts with TS1 sampling, hybrid replay buffer, and SAC.
+  - Dreamer reproduction (`reproductions/dreamer/algorithm.md`, `reproductions/dreamer/dreamer.py`): RSSM latent imagination, backwards recursive $\lambda$-returns, latent actor-critic.
+  - TD-MPC reproduction (`reproductions/tdmpc/algorithm.md`, `reproductions/tdmpc/tdmpc.py`): task-oriented latent dynamics, CEM trajectory optimization with momentum and standard deviation flooring, terminal Q bootstrapping.
+  - MuZero reproduction (`reproductions/muzero/algorithm.md`, `reproductions/muzero/muzero.py`): representation/dynamics/prediction architecture, PUCT MCTS with empirical min-max normalization.
+  - Decision Transformer reproduction (`reproductions/decision_transformer/algorithm.md`, `reproductions/decision_transformer/decision_transformer.py`): Return-to-Go (RTG) conditioned trajectory token interleaving, learned timestep embeddings, Pre-LN causal transformer decoder.
+  - C++23 native peers: `cpp/include/aurora/reproductions.hpp` and `cpp/src/reproductions.cpp` (`compute_lambda_returns`, `CEMPlanner`, `PUCTPlanner`, and `MBPOBufferManager`).
+  - Autograd and tensor core extensions: `PowBackward`, `__pow__`, `stack()`, and PyTorch-compatible `dim` argument support across reductions and activations.
+  - Python unit test suite: `tests/python/test_reproductions.py` (5/5 passed, 103/103 repo total).
+  - C++23 GoogleTest suite: `tests/cpp/test_reproductions.cpp` (4/4 passed, 60/60 repo total on GCC and Clang).
+  - Cross-language numerical parity suite: `tests/parity/test_reproductions_parity.py` (2/2 passed) asserting $< 10^{-10}$ error on latent generalized $\lambda$-returns and trajectory optimization outputs.
+  - ADR-010: MBRL Research Reproduction Suite & Native Policy Optimization.
+

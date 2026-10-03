@@ -8,6 +8,7 @@
 #include "aurora/environment.hpp"
 #include "aurora/buffer.hpp"
 #include "aurora/world_model.hpp"
+#include "aurora/reproductions.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -271,6 +272,45 @@ int main(int argc, char** argv) {
         else out = unc.total;
     } else if (req.op == "rssm_kl_divergence") {
         out = world_model::RSSM::kl_divergence(inps[0], inps[1], inps[2], inps[3]);
+    } else if (req.op == "lambda_returns") {
+        double lambda = (inps.size() > 3) ? inps[3]->item() : 0.95;
+        out = reproductions::compute_lambda_returns(inps[0], inps[1], inps[2], lambda);
+    } else if (req.op == "cem_planning") {
+        reproductions::CEMConfig config;
+        config.horizon = (inps.size() > 1) ? static_cast<size_t>(inps[1]->item()) : 3;
+        config.num_samples = 30;
+        config.num_elites = 6;
+        config.iterations = 4;
+        config.action_dim = (inps.size() > 2) ? static_cast<size_t>(inps[2]->item()) : 2;
+        config.alpha = 0.5;
+        config.seed = 42;
+
+        reproductions::CEMPlanner planner(config);
+        auto dynamics = [](const std::vector<double>& z, const std::vector<double>& a) {
+            std::vector<double> next_z(z.size());
+            for (size_t i = 0; i < z.size(); ++i) {
+                next_z[i] = z[i] + 0.1 * a[i % a.size()];
+            }
+            return next_z;
+        };
+        auto reward = [](const std::vector<double>& z, const std::vector<double>& /*a*/) {
+            double s = 0.0;
+            for (double val : z) {
+                s += val;
+            }
+            return s;
+        };
+        auto terminal_value = [](const std::vector<double>& z) {
+            double s = 0.0;
+            for (double val : z) {
+                s += 2.0 * val;
+            }
+            return s;
+        };
+
+        auto z0 = inps[0]->to_vector();
+        auto best_act = planner.plan(z0, dynamics, reward, terminal_value);
+        out = Tensor::create({best_act.size()}, best_act, false);
     } else {
         std::cerr << "Unknown op: " << req.op << "\n";
         return 1;

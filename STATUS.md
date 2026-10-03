@@ -1,7 +1,7 @@
-## Current Milestone: M5 — Latent World Models & Uncertainty Calibration (Completed)
+## Current Milestone: M6 — MBRL Research Reproduction Suite & Policy Optimization (Completed)
 
 **Overall Health:** GREEN  
-**Target Milestone:** M5 (Complete) $\to$ Transitioning to M6 (Model-Based RL & Policy Optimization)  
+**Target Milestone:** M6 (Complete) $\to$ Transitioning to M7 (Novel AURORA Algorithm: Uncertainty-Calibrated Rollouts & Optimization)  
 **Last Updated:** 2026-10-03  
 
 ---
@@ -121,20 +121,56 @@
   - Uncertainty decomposition: mean, aleatoric, epistemic, and total predictive variance ($< 10^{-10}$ error).
   - RSSM analytical Gaussian KL divergence ($< 10^{-10}$ error).
 
+### Milestone M6: MBRL Research Reproduction Suite & Policy Optimization
+- [x] Mathematical specification: `docs/mathematics/reproductions.md` (MBPO monotonic bounds, Dreamer $\lambda$-returns, TD-MPC CEM planning, MuZero PUCT MCTS, Decision Transformer RTG sequence conditioning).
+- [x] Reproduction Suite Root: `reproductions/README.md` and `reproductions/__init__.py`.
+- [x] **MBPO** (Janner et al., 2019): `reproductions/mbpo/` (`algorithm.md`, `mbpo.py`):
+  - $k$-step branched ensemble rollouts with Trajectory Sampling 1 (TS1).
+  - Hybrid real/synthetic experience replay buffer with ratio mixing.
+  - Full SAC policy optimization integration.
+- [x] **Dreamer** (Hafner et al., 2020): `reproductions/dreamer/` (`algorithm.md`, `dreamer.py`):
+  - RSSM recurrent latent imagination rollout.
+  - Analytical Generalized Advantage Estimation ($\lambda$-returns) computed backwards through latent trajectories.
+  - Squashed Gaussian continuous latent actor and latent value critic.
+- [x] **TD-MPC** (Hansen et al., 2022): `reproductions/tdmpc/` (`algorithm.md`, `tdmpc.py`):
+  - Task-oriented non-reconstructive latent representation and dynamics.
+  - Cross-Entropy Method (CEM) trajectory optimization with momentum and standard deviation flooring.
+  - Terminal Q-value bootstrapping beyond the planning horizon.
+- [x] **MuZero** (Schrittwieser et al., 2020): `reproductions/muzero/` (`algorithm.md`, `muzero.py`):
+  - Three-network decomposition: representation $h(o)$, dynamics $g(s, a)$, prediction $f(s)$.
+  - Upper Confidence Bounds for Trees (PUCT) Monte Carlo Tree Search.
+  - Empirical min-max Q-value normalization and multi-task unroll loss.
+- [x] **Decision Transformer** (Chen et al., 2021): `reproductions/decision_transformer/` (`algorithm.md`, `decision_transformer.py`):
+  - Return-to-Go (RTG) conditioned trajectory token representation.
+  - Interleaved sequence modeling with learned timestep embeddings and causal attention masking.
+  - Offline trajectory training and autoregressive test-time action generation.
+- [x] **C++23 Native Peer Implementation**: `cpp/include/aurora/reproductions.hpp` and `cpp/src/reproductions.cpp`:
+  - `compute_lambda_returns`: exact recursive $\lambda$-return computation.
+  - `CEMPlanner`: latent trajectory optimization with Gaussian proposal refitting.
+  - `PUCTPlanner`: latent MCTS with normalized PUCT score selection and tree backup.
+  - `MBPOBufferManager`: hybrid environment/model replay buffer mixing.
+- [x] **Autograd & Tensor Core Enhancements**:
+  - First-class `PowBackward` and `__pow__` operator on `Tensor`.
+  - `stack()` along arbitrary axes with full autograd tracking.
+  - PyTorch-compatible `dim` keyword argument support in `concat()`, `stack()`, `sum()`, `mean()`, `softmax()`, `log_softmax()`.
+- [x] **Cross-Language Numerical Parity**:
+  - Latent Generalized $\lambda$-returns ($< 10^{-10}$ absolute error).
+  - CEM trajectory optimization and action bounds ($< 10^{-10}$ absolute error).
+
 ---
 
 ## 3. Verified Artifacts & Test Results
 
 ### C++23 Native Build & GoogleTests
 - **GCC 16.2.1 (`ctest --preset debug`):**
-  - **56/56 passed (100%)** in `0.52s`.
-  - Targets: `aurora_cpp_smoke_test`, `aurora_cpp_tensor_test`, `aurora_cpp_gradcheck_test`, `aurora_cpp_nn_test`, `aurora_cpp_optim_test`, `aurora_cpp_transformer_test`, `aurora_cpp_rl_test`, `aurora_cpp_world_model_test`.
+  - **60/60 passed (100%)** in `0.63s`.
+  - Targets: `aurora_cpp_smoke_test`, `aurora_cpp_tensor_test`, `aurora_cpp_gradcheck_test`, `aurora_cpp_nn_test`, `aurora_cpp_optim_test`, `aurora_cpp_transformer_test`, `aurora_cpp_rl_test`, `aurora_cpp_world_model_test`, `aurora_cpp_reproductions_test`.
 - **Clang 22.1.8 (`ctest --preset clang-debug`):**
-  - **56/56 passed (100%)** in `0.45s` with **zero warnings** under `-Wall -Wextra -Wpedantic -Wshadow -Wconversion`.
+  - **60/60 passed (100%)** in `0.51s` with **zero warnings** under `-Wall -Wextra -Wpedantic -Wshadow -Wconversion`.
 
 ### Python 3.14 Test Suite (`pytest`)
 - Command: `uv run pytest`
-- **96/96 passed (100%)** in `3.60s`:
+- **103/103 passed (100%)** in `5.11s`:
   - `tests/python/test_smoke.py`: 3 passed
   - `tests/python/test_tensor.py`: 7 passed
   - `tests/python/test_gradcheck.py`: 14 passed
@@ -144,25 +180,28 @@
   - `tests/python/test_transformer.py`: 9 passed
   - `tests/python/test_rl.py`: 11 passed
   - `tests/python/test_world_model.py`: 12 passed
+  - `tests/python/test_reproductions.py`: 5 passed (MBPO, Dreamer, TD-MPC, MuZero, Decision Transformer)
   - `tests/parity/test_numerical_parity.py`: 10 passed
   - `tests/parity/test_checkpoint_parity.py`: 2 passed
   - `tests/parity/test_transformer_parity.py`: 2 passed
   - `tests/parity/test_rl_parity.py`: 6 passed
   - `tests/parity/test_world_model_parity.py`: 4 passed
+  - `tests/parity/test_reproductions_parity.py`: 2 passed
 
 ### Code Quality & Static Analysis
-- **Ruff:** `All checks passed!` across 52 source files.
-- **Mypy:** `Success: no issues found in 52 source files` (`mypy --strict`).
+- **Ruff:** `All checks passed!` across 49 source files.
+- **Mypy:** `Success: no issues found in 49 source files` (`mypy --strict`).
 
 ---
 
-## 4. Next Milestone: M6 — Model-Based RL & Policy Optimization
+## 4. Next Milestone: M7 — Novel AURORA Algorithm
 
-Primary objectives for M6:
-1. Model-Based Policy Optimization (MBPO) combining short-horizon calibrated rollouts with soft actor-critic policy optimization.
-2. Dyna-style policy optimization with adaptive real-to-synthetic experience replay ratios.
-3. Continuous benchmarking on Classic Control (`CartPole`, `Pendulum`) comparing model-free SAC vs. model-based MBPO.
-4. Evaluation of sample efficiency improvements under uncertainty-guided truncation.
-5. C++23 native MBPO training loop and cross-language convergence parity verification.
+Primary objectives for M7:
+1. Formulate the core AURORA theoretical framework: **Adaptive Uncertainty-calibrated Rollouts and Optimization for Reinforcement Agents**.
+2. Design and implement the uncertainty-calibrated adaptive imagination horizon scheduler:
+   $$H^*(s) = \max \left\{ h \in [1, H_{\max}] : \max_{\tau \le h} \mathcal{U}_{\text{epistemic}}(s_\tau) \le \tau_{\text{threshold}} \right\}$$
+3. Dynamic real-to-synthetic experience blending conditioned on empirical model calibration error.
+4. Active exploration and epistemic risk-sensitive policy optimization.
+5. C++23 native AURORA agent and comprehensive benchmarks against M6 reproductions.
 
 

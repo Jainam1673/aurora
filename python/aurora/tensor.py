@@ -22,6 +22,7 @@ from aurora.autograd import (
     MatmulBackward,
     MeanBackward,
     MulBackward,
+    PowBackward,
     ReLUBackward,
     ReshapeBackward,
     SigmoidBackward,
@@ -183,6 +184,12 @@ class Tensor:
             out.creator = MatmulBackward(self, other_t)
         return out
 
+    def __pow__(self, power: float | int) -> Tensor:
+        out = Tensor(self._data ** float(power), requires_grad=self.requires_grad, dtype=self.dtype)
+        if self.requires_grad:
+            out.creator = PowBackward(self, power)
+        return out
+
     # --- Shape Manipulation ---
     def reshape(self, *shape: int | Sequence[int]) -> Tensor:
         target_shape = (
@@ -224,7 +231,14 @@ class Tensor:
         return self.swapaxes(-1, -2)
 
     # --- Reductions ---
-    def sum(self, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Tensor:
+    def sum(
+        self,
+        axis: int | tuple[int, ...] | None = None,
+        keepdims: bool = False,
+        dim: int | tuple[int, ...] | None = None,
+    ) -> Tensor:
+        if dim is not None:
+            axis = dim
         out_data = (
             self._data.sum(axis=axis, keepdims=True)
             if keepdims
@@ -235,7 +249,14 @@ class Tensor:
             out.creator = SumBackward(self, axis, keepdims, self.shape)
         return out
 
-    def mean(self, axis: int | tuple[int, ...] | None = None, keepdims: bool = False) -> Tensor:
+    def mean(
+        self,
+        axis: int | tuple[int, ...] | None = None,
+        keepdims: bool = False,
+        dim: int | tuple[int, ...] | None = None,
+    ) -> Tensor:
+        if dim is not None:
+            axis = dim
         out_data = (
             self._data.mean(axis=axis, keepdims=True)
             if keepdims
@@ -321,7 +342,9 @@ class Tensor:
     def clip(self, min_val: float | None = None, max_val: float | None = None) -> Tensor:
         return self.clamp(min_val, max_val)
 
-    def softmax(self, axis: int = -1) -> Tensor:
+    def softmax(self, axis: int = -1, dim: int | None = None) -> Tensor:
+        if dim is not None:
+            axis = dim
         shifted = self._data - np.max(self._data, axis=axis, keepdims=True)
         exp_data = np.exp(shifted)
         out_data = exp_data / np.sum(exp_data, axis=axis, keepdims=True)
@@ -330,7 +353,9 @@ class Tensor:
             out.creator = SoftmaxBackward(self, out_data, axis)
         return out
 
-    def log_softmax(self, axis: int = -1) -> Tensor:
+    def log_softmax(self, axis: int = -1, dim: int | None = None) -> Tensor:
+        if dim is not None:
+            axis = dim
         max_val = np.max(self._data, axis=axis, keepdims=True)
         shifted = self._data - max_val
         exp_data = np.exp(shifted)
@@ -459,8 +484,10 @@ def arange(
     return Tensor(np.arange(start, stop, step, dtype=np.float64), requires_grad=requires_grad)
 
 
-def concat(tensors: Sequence[Tensor], axis: int = -1) -> Tensor:
+def concat(tensors: Sequence[Tensor], axis: int = -1, dim: int | None = None) -> Tensor:
     """Concatenate sequence of tensors along specified axis with autograd support."""
+    if dim is not None:
+        axis = dim
     if not tensors:
         raise ValueError("Cannot concatenate empty sequence of tensors")
 
@@ -474,3 +501,22 @@ def concat(tensors: Sequence[Tensor], axis: int = -1) -> Tensor:
     if req:
         out.creator = ConcatBackward(tensors, ax, split_indices)
     return out
+
+
+def stack(tensors: Sequence[Tensor], axis: int = 0, dim: int | None = None) -> Tensor:
+    """Stack sequence of tensors along a new axis with autograd support."""
+    if dim is not None:
+        axis = dim
+    if not tensors:
+        raise ValueError("Cannot stack empty sequence of tensors")
+
+    first = tensors[0]
+    ax = axis if axis >= 0 else first.ndim + 1 + axis
+
+    expanded: list[Tensor] = []
+    for t in tensors:
+        new_shape = list(t.shape)
+        new_shape.insert(ax, 1)
+        expanded.append(t.reshape(*new_shape))
+    return concat(expanded, axis=ax)
+

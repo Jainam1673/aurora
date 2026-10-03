@@ -60,11 +60,17 @@
 - [x] Build dual-language numerical parity tests asserting $< 10^{-10}$ error (`tests/parity/test_world_model_parity.py`).
 - [x] Validate 100% test pass rate across Python (`tests/python/test_world_model.py`) and C++23 (`tests/cpp/test_world_model.cpp` on GCC and Clang).
 
-## Milestone 6: Model-Based RL & Policy Optimization (MBPO / Dyna)
-- [ ] Implement conceptual reproduction of Dreamer / RSSM in `reproductions/dreamer/`.
-- [ ] Implement conceptual reproduction of TD-MPC in `reproductions/tdmpc/`.
-- [ ] Implement conceptual reproduction of MuZero latent search in `reproductions/muzero/`.
-- [ ] Document precise scope, architectural differences, and reproduction baselines.
+## Milestone 6: MBRL Research Reproduction Suite & Policy Optimization (Completed)
+- [x] Comprehensive mathematical specification in `docs/mathematics/reproductions.md`.
+- [x] Conceptual reproduction of MBPO in `reproductions/mbpo/` (`algorithm.md`, `mbpo.py`).
+- [x] Conceptual reproduction of Dreamer in `reproductions/dreamer/` (`algorithm.md`, `dreamer.py`).
+- [x] Conceptual reproduction of TD-MPC in `reproductions/tdmpc/` (`algorithm.md`, `tdmpc.py`).
+- [x] Conceptual reproduction of MuZero in `reproductions/muzero/` (`algorithm.md`, `muzero.py`).
+- [x] Conceptual reproduction of Decision Transformer in `reproductions/decision_transformer/` (`algorithm.md`, `decision_transformer.py`).
+- [x] Native C++23 peer implementations: `cpp/include/aurora/reproductions.hpp` and `cpp/src/reproductions.cpp`.
+- [x] First-class `PowBackward`, `__pow__`, `stack()`, and `dim` keyword argument support in autograd and tensor core.
+- [x] Dual-language numerical parity tests asserting $< 10^{-10}$ error (`tests/parity/test_reproductions_parity.py`).
+- [x] Validate 100% test pass rate across Python (`tests/python/test_reproductions.py`) and C++23 (`tests/cpp/test_reproductions.cpp` on GCC and Clang).
 
 ## Milestone 7: Uncertainty Module & Calibration
 - [ ] Implement deep ensemble dynamics models $\{f_1, \dots, f_K\}$.

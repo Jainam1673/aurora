@@ -103,3 +103,23 @@ This document records key architectural, scientific, and engineering decisions m
   5. Add native `sigmoid()` activation and backward autograd nodes across Python and C++23 tensor engines.
 - **Consequences:** Provides a complete, fully tested, peer-validated world modeling engine with zero external ML framework dependencies, achieving $< 10^{-10}$ cross-language parity on NLL loss, uncertainty decomposition, and KL divergence.
 
+---
+
+## ADR-010: MBRL Research Reproduction Suite & Native Policy Optimization
+- **Date:** 2026-10-03
+- **Status:** Accepted
+- **Context:** Milestone 6 establishes research-grade reproductions of foundational Model-Based Reinforcement Learning lineages to benchmark against and lay the theoretical groundwork for the novel AURORA algorithm:
+  1. Dyna-style branched ensemble rollouts with hybrid replay buffers (MBPO; Janner et al., 2019).
+  2. Latent imagination actor-critic with analytical $\lambda$-returns (Dreamer; Hafner et al., 2020).
+  3. Non-reconstructive task latent trajectory optimization via Cross-Entropy Method and terminal Q-value bootstrapping (TD-MPC; Hansen et al., 2022).
+  4. Latent Monte Carlo Tree Search with PUCT and empirical min-max value normalization (MuZero; Schrittwieser et al., 2020).
+  5. Return-to-Go conditioned autoregressive trajectory sequence modeling (Decision Transformer; Chen et al., 2021).
+  6. Scientific peer C++23 native implementations providing high-throughput trajectory planning, $\lambda$-return calculation, and hybrid buffer management.
+- **Decision:**
+  1. Implement each algorithm from first principles in `reproductions/` with dedicated `algorithm.md` documentation, rigorous types, and zero external ML framework dependencies.
+  2. Implement native C++23 peers in `cpp/include/aurora/reproductions.hpp` and `cpp/src/reproductions.cpp` (`compute_lambda_returns`, `CEMPlanner`, `PUCTPlanner`, and `MBPOBufferManager`).
+  3. Implement first-class `PowBackward` and `__pow__` operator across autograd and tensor core, alongside `stack()` and `dim` keyword parameter aliases.
+  4. Enforce strict numerical parity testing across Python and C++23 engines asserting $< 10^{-10}$ error on latent generalized $\lambda$-returns and trajectory optimization outputs.
+- **Consequences:** Validates all core MBRL architectural paradigms natively within AURORA, creates canonical baselines for downstream experimental comparison, and achieves 100% test pass rate across 103 pytest tests and 60 GoogleTest targets (both GCC and Clang toolchains).
+
+
