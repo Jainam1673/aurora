@@ -143,15 +143,9 @@ class TestBuffers:
         buf = RolloutBuffer(buffer_size=3, obs_shape=(2,), action_shape=(), batch_size=1)
 
         # Add 3 transitions
-        buf.add(
-            np.array([[1.0, 2.0]]), np.array([0]), 1.0, False, 0.5, -0.2
-        )
-        buf.add(
-            np.array([[2.0, 3.0]]), np.array([1]), 2.0, False, 1.0, -0.3
-        )
-        buf.add(
-            np.array([[3.0, 4.0]]), np.array([0]), 3.0, True, 1.5, -0.4
-        )
+        buf.add(np.array([[1.0, 2.0]]), np.array([0]), 1.0, False, 0.5, -0.2)
+        buf.add(np.array([[2.0, 3.0]]), np.array([1]), 2.0, False, 1.0, -0.3)
+        buf.add(np.array([[3.0, 4.0]]), np.array([0]), 3.0, True, 1.5, -0.4)
 
         last_val = np.array([0.0])
         last_done = np.array([1.0])

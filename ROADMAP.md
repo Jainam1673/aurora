@@ -15,9 +15,9 @@ This roadmap outlines the sequenced progression of AURORA from bootstrap to publ
 | **M4** | Reinforcement Learning Primitives | **Completed** | Bandits, TD($\lambda$), GAE, PPO, SAC |
 | **M5** | Latent World Models & Imagination | **Completed** | Ensemble dynamics, uncertainty, RSSM, rollout engine |
 | **M6** | MBRL Research Reproduction Suite | **Completed** | MBPO, Dreamer, TD-MPC, MuZero, Decision Transformer |
-| **M7** | AURORA Novel Algorithm | **Active** | Adaptive horizon $H^*(s)$, dynamic blending, calibrated RL |
-| **M8** | Uncertainty Calibration & Active Acquisition | Queued | Deep ensemble calibration, error rank correlation |
-| **M9** | Scientific Benchmarking & Systems Analysis | Queued | Multi-seed IQM, ablation studies, throughput profiling |
+| **M7** | AURORA Novel Algorithm | **Completed** | Adaptive horizon $H^*(s)$, dynamic blending, calibrated RL |
+| **M8** | Scientific Benchmarking & Statistical Evaluation | **Active** | Multi-seed IQM, ablation studies, throughput profiling |
+| **M9** | Systems Performance & Native Scaling | Queued | Profiling, SIMD vectorization, memory optimization |
 | **M10** | Publication-Grade Paper & Artifacts | Queued | LaTeX paper, appendices, reproducible manifests |
 
 ---
@@ -93,21 +93,26 @@ This roadmap outlines the sequenced progression of AURORA from bootstrap to publ
   - Cross-language numerical parity suite verifying $< 10^{-10}$ error.
 - **Acceptance Criteria:** 100% test pass rate across pytest (103/103) and GoogleTest (60/60 on GCC and Clang).
 
-### M7: Uncertainty Module & Calibration
-- **Goal:** Quantify and calibrate epistemic and aleatoric world model uncertainty.
+### M7: Novel AURORA Algorithm (Completed)
+- **Goal:** Design, implement, and validate the novel AURORA model-based reinforcement learning algorithm.
 - **Deliverables:**
-  - Deep ensemble dynamics models.
-  - Disagreement metrics and uncertainty calibration benchmarking suite.
-  - Empirical evaluation of $U_t$ vs. cumulative trajectory error $\|z_{t+h} - \hat{z}_{t+h}\|$.
-- **Acceptance Criteria:** AUROC and Spearman rank correlation demonstrate statistically significant predictive capability.
+  - Mathematical formulation (`docs/mathematics/aurora_algorithm.md`) and algorithm specification (`python/aurora/algorithm/algorithm.md`).
+  - `AdaptiveHorizonScheduler`: validation-error decay thresholding and cumulative discounted uncertainty budgeting.
+  - `DynamicBlendingController`: momentum-smoothed synthetic-to-real replay modulation.
+  - `AURORAAgent`: integrated world model, adaptive rollouts, hybrid buffer sampling, and pessimistic actor updates.
+  - C++23 native peers in `cpp/include/aurora/aurora_algorithm.hpp` and `cpp/src/aurora_algorithm.cpp`.
+  - Parity test suite (`tests/parity/test_aurora_parity.py`) verifying $< 10^{-10}$ error.
+  - Benchmark harness (`benchmarks/benchmark_aurora.py`) evaluating AURORA vs. MBPO vs. SAC.
+- **Acceptance Criteria:** 100% test pass rate across pytest (112/112) and GoogleTest (66/66 on GCC and Clang).
 
-### M8: AURORA Algorithm
-- **Goal:** Novel adaptive uncertainty-calibrated imagination and planning algorithm.
+### M8: Scientific Benchmarking & Statistical Evaluation (Active)
+- **Goal:** Rigorous statistical evaluation across multi-tier environments and ablation studies.
 - **Deliverables:**
-  - Dynamic horizon controller $H_t = f(U_t, D_t, S_t, C_t)$.
-  - Pessimistic planning value correction: $\tilde{V} = \mu_V - \beta \sigma_V$.
-  - Active real experience acquisition switch based on uncertainty bounds.
-- **Acceptance Criteria:** Controlled comparison showing sample-efficiency gain over fixed horizons $H \in \{1, 3, 5, 10, 20\}$.
+  - Multi-seed benchmark protocol with aggregate performance profiles (Interquartile Mean, bootstrap CIs).
+  - Systematic ablation studies (dissecting adaptive horizon, dynamic blending, and pessimistic penalty).
+  - Benchmark suite across classic control and continuous control tasks.
+  - Automated figure, curve, and table generation infrastructure.
+- **Acceptance Criteria:** Statistically grounded comparisons under fair interaction and compute budgets.
 
 ### M9: Scientific Benchmarking & Systems Analysis
 - **Goal:** Rigorous statistical evaluation across multi-tier environments.

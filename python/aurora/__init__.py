@@ -3,7 +3,7 @@
 A research-grade platform for uncertainty-aware model-based reinforcement learning.
 """
 
-from aurora import distributions, environments, nn, optim, rl, world_model
+from aurora import algorithm, distributions, environments, nn, optim, rl, world_model
 from aurora.checkpoint import load_checkpoint, save_checkpoint
 from aurora.core import AuroraInfo, get_system_info
 from aurora.gradcheck import gradcheck
@@ -14,6 +14,7 @@ __all__ = [
     "AuroraInfo",
     "Tensor",
     "__version__",
+    "algorithm",
     "arange",
     "distributions",
     "environments",

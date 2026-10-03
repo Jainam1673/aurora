@@ -209,9 +209,7 @@ class TestRLNumericalParity:
         last_d = 0.0
 
         # Python GAE
-        buf_py = RolloutBuffer(
-            buffer_size=t_steps, obs_shape=(1,), action_shape=(1,), batch_size=1
-        )
+        buf_py = RolloutBuffer(buffer_size=t_steps, obs_shape=(1,), action_shape=(1,), batch_size=1)
         for t in range(t_steps):
             buf_py.add(
                 np.array([0.0]),

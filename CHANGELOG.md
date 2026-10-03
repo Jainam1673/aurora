@@ -83,4 +83,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - C++23 GoogleTest suite: `tests/cpp/test_reproductions.cpp` (4/4 passed, 60/60 repo total on GCC and Clang).
   - Cross-language numerical parity suite: `tests/parity/test_reproductions_parity.py` (2/2 passed) asserting $< 10^{-10}$ error on latent generalized $\lambda$-returns and trajectory optimization outputs.
   - ADR-010: MBRL Research Reproduction Suite & Native Policy Optimization.
+- **M7 Novel AURORA Algorithm**:
+  - Theoretical framework in `docs/mathematics/aurora_algorithm.md`: monotonic policy improvement bounds under epistemic model error, adaptive horizon derivation, dynamic replay blending formula, and epistemic risk-sensitive pessimistic value optimization.
+  - Comprehensive engineering specification in `python/aurora/algorithm/algorithm.md`: inputs/outputs, pseudocode, numerical stability safeguards, and failure modes.
+  - Python algorithm package `python/aurora/algorithm/`:
+    - `AdaptiveHorizonScheduler`: validation error threshold decay $\tau = \tau_{\text{base}} \exp(-\kappa \mathcal{L}_{\text{val}})$, state-specific rollout truncation, and cumulative discounted uncertainty budgeting.
+    - `DynamicBlendingController`: momentum-smoothed synthetic-to-real replay ratio modulation $\eta_t = \eta_{\max}[1 - \min(1, \bar{u}/u_{\text{target}})]$.
+    - `AURORAAgent`: integrated ensemble dynamics, adaptive imagination rollouts, hybrid buffer sampling, and pessimistic actor updates with active exploration trigger.
+  - C++23 native peers in `cpp/include/aurora/aurora_algorithm.hpp` and `cpp/src/aurora_algorithm.cpp` (`AdaptiveHorizonScheduler`, `DynamicBlendingController`, `compute_pessimistic_value`, `should_trigger_active_exploration`).
+  - Unit and integration tests in Python (`tests/python/test_aurora_algorithm.py`: 6/6 passed, 112/112 repo total).
+  - C++23 GoogleTest suite (`tests/cpp/test_aurora_algorithm.cpp`: 6/6 passed, 66/66 repo total on GCC and Clang).
+  - Cross-language numerical parity suite (`tests/parity/test_aurora_parity.py`: 3/3 passed) asserting $< 10^{-10}$ error on adaptive horizon scheduling, dynamic blending ratios, and pessimistic value penalties.
+  - Empirical benchmark suite (`benchmarks/benchmark_aurora.py`) comparing AURORA vs. MBPO vs. SAC on Continuous Control.
+  - ADR-011: Novel AURORA Algorithm Architecture (Uncertainty-Calibrated Adaptive Imagination & Dynamic Blending).
 

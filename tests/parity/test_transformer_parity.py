@@ -276,4 +276,3 @@ def test_transformer_block_optimization_step_parity() -> None:
                 atol=1e-10,
                 err_msg=f"Discrepancy in AdamW exp_avg_sq for param index {idx}",
             )
-

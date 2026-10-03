@@ -71,6 +71,7 @@ add_library(aurora_core
     cpp/src/buffer.cpp
     cpp/src/world_model.cpp
     cpp/src/reproductions.cpp
+    cpp/src/aurora_algorithm.cpp
 )
 add_library(aurora::core ALIAS aurora_core)
 
@@ -211,6 +212,17 @@ if(AURORA_BUILD_TESTS)
             GTest::gtest_main
     )
     gtest_discover_tests(aurora_cpp_reproductions_test)
+
+    # AURORA Algorithm Test
+    add_executable(aurora_cpp_aurora_test
+        tests/cpp/test_aurora_algorithm.cpp
+    )
+    target_link_libraries(aurora_cpp_aurora_test
+        PRIVATE
+            aurora::core
+            GTest::gtest_main
+    )
+    gtest_discover_tests(aurora_cpp_aurora_test)
 endif()
 
 

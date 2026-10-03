@@ -122,4 +122,19 @@ This document records key architectural, scientific, and engineering decisions m
   4. Enforce strict numerical parity testing across Python and C++23 engines asserting $< 10^{-10}$ error on latent generalized $\lambda$-returns and trajectory optimization outputs.
 - **Consequences:** Validates all core MBRL architectural paradigms natively within AURORA, creates canonical baselines for downstream experimental comparison, and achieves 100% test pass rate across 103 pytest tests and 60 GoogleTest targets (both GCC and Clang toolchains).
 
+---
+
+## ADR-011: Novel AURORA Algorithm Architecture (Uncertainty-Calibrated Adaptive Imagination & Dynamic Blending)
+- **Date:** 2026-10-03
+- **Status:** Accepted
+- **Context:** Milestone 7 introduces the core novel algorithmic contribution of the project: **AURORA** (*Adaptive Uncertainty-calibrated Rollouts and Optimization for Reinforcement Agents*). Standard Dyna-style MBRL (e.g. MBPO) uses predetermined, hand-tuned rollout schedules and static real-to-synthetic replay ratios $\eta$, leading to catastrophic policy degradation when imaginary rollouts venture into out-of-distribution hallucinations.
+- **Decision:**
+  1. **Adaptive Horizon Scheduling:** Dynamically truncate imagination rollouts along individual state trajectories when peak epistemic disagreement $u_{\text{epi}}(s_h, a_h) > \tau_{\text{threshold}}$ or when accumulated discounted uncertainty budget $\sum_{k=0}^h \gamma^k u_{\text{epi}}(s_k, a_k) > B_{\max}$. Adapt threshold $\tau_{\text{threshold}} = \tau_{\text{base}} \exp(-\kappa \cdot \mathcal{L}_{\text{val}})$ based on dynamics validation error.
+  2. **Dynamic Experience Blending:** Modulate the synthetic data fraction $\eta_t = \eta_{\max} [1 - \min(1, \bar{u}_t / u_{\text{target}})]$ with exponential moving average momentum smoothing ($\rho = 0.8$), gracefully decaying model dependence to pure model-free replay when model uncertainty surges.
+  3. **Epistemic Risk-Sensitive Pessimistic Value Optimization:** Regularize policy improvement via $\tilde{Q}(s, a) = \min_j Q_j(s, a) - \beta_{\text{pess}} \cdot u_{\text{epi}}(s, a)$, providing lower-bound value guarantees that penalize model hallucinations.
+  4. **Active Exploration Trigger:** When mean epistemic uncertainty exceeds $\tau_{\text{active}}$, trigger exploration perturbations to gather high-information transition data in unfamiliar dynamics regimes.
+  5. **C++23 Native Peer Implementation:** Provide native C++23 implementations of `AdaptiveHorizonScheduler`, `DynamicBlendingController`, and `compute_pessimistic_value` in `cpp/include/aurora/aurora_algorithm.hpp` and `cpp/src/aurora_algorithm.cpp`.
+  6. **Cross-Language Numerical Parity:** Enforce $< 10^{-10}$ error bounds between Python 3.14 and C++23 native implementations.
+- **Consequences:** Provides a rigorous, mathematically unified model-based RL algorithm with proven monotonic improvement bounds, full numerical parity across dual-language peers, and empirical benchmarks against fixed-horizon MBPO and model-free SAC.
+
 

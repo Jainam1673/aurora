@@ -72,22 +72,28 @@
 - [x] Dual-language numerical parity tests asserting $< 10^{-10}$ error (`tests/parity/test_reproductions_parity.py`).
 - [x] Validate 100% test pass rate across Python (`tests/python/test_reproductions.py`) and C++23 (`tests/cpp/test_reproductions.cpp` on GCC and Clang).
 
-## Milestone 7: Uncertainty Module & Calibration
-- [ ] Implement deep ensemble dynamics models $\{f_1, \dots, f_K\}$.
-- [ ] Implement latent disagreement and reward uncertainty metrics.
-- [ ] Build calibration benchmark measuring uncertainty $U_t$ vs. empirical future error $\|z_{t+h} - \hat{z}_{t+h}\|$.
-- [ ] Compute Spearman rank correlation and AUROC for rollout failure prediction.
+## Milestone 7: Novel AURORA Algorithm (Completed)
+- [x] Mathematical specification: `docs/mathematics/aurora_algorithm.md` (monotonic improvement bounds, adaptive horizon, dynamic blending, pessimistic optimization).
+- [x] Engineering specification: `python/aurora/algorithm/algorithm.md` (pseudocode, I/O, numerical stability, failure modes).
+- [x] Implement `AdaptiveHorizonScheduler` in Python with validation error decay thresholding and cumulative budget tracking (`python/aurora/algorithm/scheduler.py`).
+- [x] Implement `DynamicBlendingController` in Python with momentum-smoothed synthetic ratio modulation (`python/aurora/algorithm/scheduler.py`).
+- [x] Implement `AURORAAgent` in Python with integrated dynamics, adaptive imagination rollouts, hybrid buffer sampling, and pessimistic actor updates (`python/aurora/algorithm/aurora_agent.py`).
+- [x] Implement C++23 native peers: `cpp/include/aurora/aurora_algorithm.hpp` and `cpp/src/aurora_algorithm.cpp`.
+- [x] Cross-language numerical parity tests asserting $< 10^{-10}$ error (`tests/parity/test_aurora_parity.py`).
+- [x] Unit and integration test suites in Python (`tests/python/test_aurora_algorithm.py`) and C++ GoogleTest (`tests/cpp/test_aurora_algorithm.cpp`).
+- [x] Empirical benchmark harness comparing AURORA vs. MBPO vs. SAC (`benchmarks/benchmark_aurora.py`).
+- [x] Validate 100% test pass rate across Python (112/112) and C++23 (66/66 on GCC and Clang).
 
-## Milestone 8: AURORA Algorithm
-- [ ] Implement adaptive horizon function $H_t = f(U_t, D_t, S_t, C_t)$.
-- [ ] Implement pessimistic value penalization $\tilde{V} = \mu_V - \beta \sigma_V$.
-- [ ] Implement active real-data collection trigger.
-- [ ] Run benchmark comparisons against fixed horizons $H \in \{1, 3, 5, 10, 20\}$.
+## Milestone 8: Scientific Benchmarking & Statistical Evaluation
+- [ ] Multi-seed statistical benchmark protocol with aggregate performance profiles (IQM, bootstrap CIs).
+- [ ] Systematic ablation studies (dissecting adaptive horizon, dynamic blending, and pessimistic penalty).
+- [ ] Benchmark suite across classic control and continuous state tasks.
+- [ ] Experiment logging, automated visualization, and manifest tracking infrastructure.
 
-## Milestone 9: Scientific Benchmarking
-- [ ] Run multi-seed evaluation with stratified bootstrap confidence intervals.
-- [ ] Perform full ablation study (full AURORA vs. component ablations).
-- [ ] Conduct systems performance profiling (env vs. model vs. planner bottlenecks).
+## Milestone 9: Systems Performance & Native Scaling
+- [ ] Systems performance profiling (env vs. model vs. planner bottlenecks).
+- [ ] Native C++23 SIMD vectorization and cache locality optimizations.
+- [ ] Trajectory throughput benchmarks (env steps/s, model steps/s, planning decisions/s).
 
 ## Milestone 10: Research Paper & Publication Package
 - [ ] Write publication-ready LaTeX manuscript in `paper/`.

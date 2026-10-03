@@ -135,9 +135,9 @@ class TestWorldModelNumericalParity:
 
         assert fwd_err < 1e-10, f"Gaussian NLL loss fwd parity violated: err={fwd_err}"
         assert mean_grad_err < 1e-10, f"Gaussian NLL mean grad parity violated: err={mean_grad_err}"
-        assert (
-            log_var_grad_err < 1e-10
-        ), f"Gaussian NLL log_var grad parity violated: err={log_var_grad_err}"
+        assert log_var_grad_err < 1e-10, (
+            f"Gaussian NLL log_var grad parity violated: err={log_var_grad_err}"
+        )
 
     def test_uncertainty_decomposition_parity(self) -> None:
         np.random.seed(999)

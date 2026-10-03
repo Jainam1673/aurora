@@ -519,4 +519,3 @@ def stack(tensors: Sequence[Tensor], axis: int = 0, dim: int | None = None) -> T
         new_shape.insert(ax, 1)
         expanded.append(t.reshape(*new_shape))
     return concat(expanded, axis=ax)
-

@@ -9,6 +9,7 @@
 #include "aurora/buffer.hpp"
 #include "aurora/world_model.hpp"
 #include "aurora/reproductions.hpp"
+#include "aurora/aurora_algorithm.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -311,6 +312,47 @@ int main(int argc, char** argv) {
         auto z0 = inps[0]->to_vector();
         auto best_act = planner.plan(z0, dynamics, reward, terminal_value);
         out = Tensor::create({best_act.size()}, best_act, false);
+    } else if (req.op == "aurora_adaptive_horizon") {
+        algorithm::AdaptiveHorizonConfig cfg;
+        if (inps.size() > 1) {
+            auto cfg_data = inps[1]->to_vector();
+            if (cfg_data.size() >= 6) {
+                cfg.horizon_max = static_cast<size_t>(cfg_data[0]);
+                cfg.horizon_min = static_cast<size_t>(cfg_data[1]);
+                cfg.tau_base = cfg_data[2];
+                cfg.kappa = cfg_data[3];
+                cfg.budget_max = cfg_data[4];
+                cfg.gamma = cfg_data[5];
+            }
+        }
+        algorithm::AdaptiveHorizonScheduler scheduler(cfg);
+        if (inps.size() > 2) {
+            scheduler.update_threshold(inps[2]->item());
+        }
+        size_t h_star = scheduler.compute_adaptive_horizon(inps[0]);
+        out = Tensor::create({1}, static_cast<double>(h_star), false);
+    } else if (req.op == "aurora_blending_ratio") {
+        algorithm::DynamicBlendingConfig cfg;
+        if (inps.size() > 1) {
+            auto cfg_data = inps[1]->to_vector();
+            if (cfg_data.size() >= 4) {
+                cfg.eta_max = cfg_data[0];
+                cfg.eta_min = cfg_data[1];
+                cfg.u_target = cfg_data[2];
+                cfg.momentum = cfg_data[3];
+            }
+        }
+        algorithm::DynamicBlendingController controller(cfg);
+        auto u_seq = inps[0]->to_vector();
+        std::vector<double> etas;
+        etas.reserve(u_seq.size());
+        for (double u : u_seq) {
+            etas.push_back(controller.compute_ratio(u));
+        }
+        out = Tensor::create({etas.size()}, etas, false);
+    } else if (req.op == "aurora_pessimistic_value") {
+        double beta_pess = (inps.size() > 3) ? inps[3]->item() : 0.5;
+        out = algorithm::compute_pessimistic_value(inps[0], inps[1], inps[2], beta_pess);
     } else {
         std::cerr << "Unknown op: " << req.op << "\n";
         return 1;

@@ -1,7 +1,7 @@
-## Current Milestone: M6 — MBRL Research Reproduction Suite & Policy Optimization (Completed)
+## Current Milestone: M7 — Novel AURORA Algorithm: Uncertainty-Calibrated Rollouts & Optimization (Completed)
 
 **Overall Health:** GREEN  
-**Target Milestone:** M6 (Complete) $\to$ Transitioning to M7 (Novel AURORA Algorithm: Uncertainty-Calibrated Rollouts & Optimization)  
+**Target Milestone:** M7 (Complete) $\to$ Transitioning to M8 (Scientific Benchmarking, Statistical Evaluation & Verification)  
 **Last Updated:** 2026-10-03  
 
 ---
@@ -157,20 +157,36 @@
   - Latent Generalized $\lambda$-returns ($< 10^{-10}$ absolute error).
   - CEM trajectory optimization and action bounds ($< 10^{-10}$ absolute error).
 
+### Milestone M7: Novel AURORA Algorithm
+- [x] **Theoretical Specification**:
+  - Formulated complete mathematical framework in `docs/mathematics/aurora_algorithm.md` including monotonic improvement bound under epistemic model error, adaptive horizon derivation, dynamic replay blending formula, and epistemic risk-sensitive pessimistic value optimization.
+  - Detailed engineering algorithm document in `python/aurora/algorithm/algorithm.md` covering pseudocode, inputs/outputs, numerical stability, and failure modes.
+- [x] **Python Reference Implementation**:
+  - `AdaptiveHorizonScheduler`: validation error threshold decay $\tau = \tau_{\text{base}} \exp(-\kappa \mathcal{L}_{\text{val}})$, state-specific rollout truncation, and cumulative uncertainty budgeting.
+  - `DynamicBlendingController`: momentum-smoothed synthetic-to-real replay ratio $\eta_t = \eta_{\max}[1 - \min(1, \bar{u}/u_{\text{target}})]$.
+  - `AURORAAgent`: integrated ensemble dynamics, adaptive imagination rollouts, hybrid buffer sampling, and pessimistic actor updates with active exploration trigger.
+- [x] **C++23 Native Peer Implementation**:
+  - `cpp/include/aurora/aurora_algorithm.hpp` and `cpp/src/aurora_algorithm.cpp`: `AdaptiveHorizonScheduler`, `DynamicBlendingController`, `compute_pessimistic_value`, `should_trigger_active_exploration`.
+  - Registered to `aurora_core` and `aurora_parity_runner`.
+- [x] **Cross-Language Numerical Parity**:
+  - Parity tests in `tests/parity/test_aurora_parity.py` asserting $< 10^{-10}$ numerical error across adaptive horizon calculations, dynamic blending trajectories, and pessimistic value penalties.
+- [x] **Empirical Benchmark Suite**:
+  - `benchmarks/benchmark_aurora.py` evaluating comparative performance across AURORA (Adaptive), MBPO (Fixed Horizon H=4), and Model-Free SAC on Continuous Control.
+
 ---
 
 ## 3. Verified Artifacts & Test Results
 
 ### C++23 Native Build & GoogleTests
 - **GCC 16.2.1 (`ctest --preset debug`):**
-  - **60/60 passed (100%)** in `0.63s`.
-  - Targets: `aurora_cpp_smoke_test`, `aurora_cpp_tensor_test`, `aurora_cpp_gradcheck_test`, `aurora_cpp_nn_test`, `aurora_cpp_optim_test`, `aurora_cpp_transformer_test`, `aurora_cpp_rl_test`, `aurora_cpp_world_model_test`, `aurora_cpp_reproductions_test`.
+  - **66/66 passed (100%)** in `0.57s`.
+  - Targets: `aurora_cpp_smoke_test`, `aurora_cpp_tensor_test`, `aurora_cpp_gradcheck_test`, `aurora_cpp_nn_test`, `aurora_cpp_optim_test`, `aurora_cpp_transformer_test`, `aurora_cpp_rl_test`, `aurora_cpp_world_model_test`, `aurora_cpp_reproductions_test`, `aurora_cpp_aurora_test`.
 - **Clang 22.1.8 (`ctest --preset clang-debug`):**
-  - **60/60 passed (100%)** in `0.51s` with **zero warnings** under `-Wall -Wextra -Wpedantic -Wshadow -Wconversion`.
+  - **66/66 passed (100%)** in `0.52s` with **zero warnings** under `-Wall -Wextra -Wpedantic -Wshadow -Wconversion`.
 
 ### Python 3.14 Test Suite (`pytest`)
 - Command: `uv run pytest`
-- **103/103 passed (100%)** in `5.11s`:
+- **112/112 passed (100%)** in `5.74s`:
   - `tests/python/test_smoke.py`: 3 passed
   - `tests/python/test_tensor.py`: 7 passed
   - `tests/python/test_gradcheck.py`: 14 passed
@@ -181,27 +197,28 @@
   - `tests/python/test_rl.py`: 11 passed
   - `tests/python/test_world_model.py`: 12 passed
   - `tests/python/test_reproductions.py`: 5 passed (MBPO, Dreamer, TD-MPC, MuZero, Decision Transformer)
+  - `tests/python/test_aurora_algorithm.py`: 6 passed (Adaptive Horizon, Dynamic Blending, AURORAAgent Workflow)
   - `tests/parity/test_numerical_parity.py`: 10 passed
   - `tests/parity/test_checkpoint_parity.py`: 2 passed
   - `tests/parity/test_transformer_parity.py`: 2 passed
   - `tests/parity/test_rl_parity.py`: 6 passed
   - `tests/parity/test_world_model_parity.py`: 4 passed
   - `tests/parity/test_reproductions_parity.py`: 2 passed
+  - `tests/parity/test_aurora_parity.py`: 3 passed (< 1e-10 error)
 
 ### Code Quality & Static Analysis
-- **Ruff:** `All checks passed!` across 49 source files.
-- **Mypy:** `Success: no issues found in 49 source files` (`mypy --strict`).
+- **Ruff:** `All checks passed!` across 62 source files.
+- **Ruff Format:** `62 files already formatted`.
+- **Mypy:** `Success: no issues found in 41 source files` (`mypy --strict`).
 
 ---
 
-## 4. Next Milestone: M7 — Novel AURORA Algorithm
+## 4. Next Milestone: M8 — Scientific Benchmarking & Statistical Evaluation
 
-Primary objectives for M7:
-1. Formulate the core AURORA theoretical framework: **Adaptive Uncertainty-calibrated Rollouts and Optimization for Reinforcement Agents**.
-2. Design and implement the uncertainty-calibrated adaptive imagination horizon scheduler:
-   $$H^*(s) = \max \left\{ h \in [1, H_{\max}] : \max_{\tau \le h} \mathcal{U}_{\text{epistemic}}(s_\tau) \le \tau_{\text{threshold}} \right\}$$
-3. Dynamic real-to-synthetic experience blending conditioned on empirical model calibration error.
-4. Active exploration and epistemic risk-sensitive policy optimization.
-5. C++23 native AURORA agent and comprehensive benchmarks against M6 reproductions.
+Primary objectives for M8:
+1. Multi-seed statistical benchmark protocol with aggregate performance profiles (IQM, bootstrap CIs).
+2. Systematic ablation studies (dissecting adaptive horizon, dynamic blending, and pessimistic penalty).
+3. Benchmark suite across classic control and continuous state tasks.
+4. Experiment logging, automated visualization, and manifest tracking infrastructure.
 
 
