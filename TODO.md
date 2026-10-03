@@ -84,11 +84,17 @@
 - [x] Empirical benchmark harness comparing AURORA vs. MBPO vs. SAC (`benchmarks/benchmark_aurora.py`).
 - [x] Validate 100% test pass rate across Python (112/112) and C++23 (66/66 on GCC and Clang).
 
-## Milestone 8: Scientific Benchmarking & Statistical Evaluation
-- [ ] Multi-seed statistical benchmark protocol with aggregate performance profiles (IQM, bootstrap CIs).
-- [ ] Systematic ablation studies (dissecting adaptive horizon, dynamic blending, and pessimistic penalty).
-- [ ] Benchmark suite across classic control and continuous state tasks.
-- [ ] Experiment logging, automated visualization, and manifest tracking infrastructure.
+## Milestone 8: Scientific Benchmarking & Statistical Evaluation (Completed)
+- [x] Mathematical specification: `docs/mathematics/statistical_evaluation.md` (IQM, bootstrap CI, performance profiles, probability of improvement, Welch t-test).
+- [x] Implement Python statistical evaluation module (`evaluation/metrics.py`, `profiles.py`, `significance.py`, `manifest.py`, `plotting.py`).
+- [x] Create declarative experiment configurations in `configs/` (`pendulum_aurora.json`, `pendulum_mbpo.json`, ablation configs).
+- [x] Implement reproducible experiment runner with immutable manifest generation (`experiments/runner.py`).
+- [x] Implement systematic component ablation study across 4 conditions and multiple seeds (`experiments/ablation_study.py`).
+- [x] Implement C++23 native peers: `cpp/include/aurora/statistical_evaluation.hpp` and `cpp/src/statistical_evaluation.cpp`.
+- [x] Cross-language numerical parity tests asserting $< 10^{-10}$ error (`tests/parity/test_evaluation_parity.py`).
+- [x] Unit test suites in Python (`tests/python/test_evaluation.py`) and C++ GoogleTest (`tests/cpp/test_evaluation.cpp`).
+- [x] Automated visualization and performance profiles curve plotting (`evaluation/plotting.py`, `results/ablation/performance_profiles.png`).
+- [x] Validate 100% test pass rate across Python (123/123) and C++23 (70/70 on GCC and Clang).
 
 ## Milestone 9: Systems Performance & Native Scaling
 - [ ] Systems performance profiling (env vs. model vs. planner bottlenecks).

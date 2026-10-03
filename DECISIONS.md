@@ -137,4 +137,19 @@ This document records key architectural, scientific, and engineering decisions m
   6. **Cross-Language Numerical Parity:** Enforce $< 10^{-10}$ error bounds between Python 3.14 and C++23 native implementations.
 - **Consequences:** Provides a rigorous, mathematically unified model-based RL algorithm with proven monotonic improvement bounds, full numerical parity across dual-language peers, and empirical benchmarks against fixed-horizon MBPO and model-free SAC.
 
+---
+
+## ADR-012: Scientific Benchmarking, Stratified Statistical Evaluation, and Ablation Methodology
+- **Date:** 2026-10-03
+- **Status:** Accepted
+- **Context:** Reinforcement Learning evaluations frequently suffer from statistical fragility, non-reproducible seed cherry-picking, and high sensitivity to outliers. Point estimates (sample mean $\pm$ standard deviation) are easily distorted by heavy-tailed failures.
+- **Decision:**
+  1. Mandate **Interquartile Mean (IQM)** as the central location metric for all benchmark evaluations, trimming the top and bottom 25% of scores to eliminate outlier skew while preserving distribution shape.
+  2. Estimate sampling variability using **Stratified Percentile Bootstrap Confidence Intervals** (95% CIs) with $B=2000$ resamples.
+  3. Evaluate pairwise algorithm dominance using **Probability of Improvement** $P(X > Y) = \frac{1}{N_X N_Y} \sum_{i,j} [\mathbf{1}(x_i > y_j) + 0.5 \cdot \mathbf{1}(x_i == y_j)]$ and **Performance Profile CDFs** $F(\tau) = \frac{1}{N} \sum_i \mathbf{1}(x_i \ge \tau)$.
+  4. Perform hypothesis testing via Welch's two-sample $t$-test (unequal variances) and non-parametric Mann-Whitney U tests.
+  5. Enforce an immutable JSON **Experiment Manifest** for every training run recording git commit, dirty flag, Python/compiler versions, exact hyperparameters, and hardware specs.
+  6. Implement native C++23 peers (`compute_iqm`, `bootstrap_ci`, `probability_of_improvement`, `performance_profile`) in `cpp/include/aurora/statistical_evaluation.hpp` and `cpp/src/statistical_evaluation.cpp`, tested with $< 10^{-10}$ cross-language parity.
+- **Consequences:** Elevates AURORA's experimental infrastructure to peer-reviewed publication standards, guaranteeing statistical integrity and auditable traceability for all experimental claims.
+
 

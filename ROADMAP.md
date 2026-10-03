@@ -16,8 +16,8 @@ This roadmap outlines the sequenced progression of AURORA from bootstrap to publ
 | **M5** | Latent World Models & Imagination | **Completed** | Ensemble dynamics, uncertainty, RSSM, rollout engine |
 | **M6** | MBRL Research Reproduction Suite | **Completed** | MBPO, Dreamer, TD-MPC, MuZero, Decision Transformer |
 | **M7** | AURORA Novel Algorithm | **Completed** | Adaptive horizon $H^*(s)$, dynamic blending, calibrated RL |
-| **M8** | Scientific Benchmarking & Statistical Evaluation | **Active** | Multi-seed IQM, ablation studies, throughput profiling |
-| **M9** | Systems Performance & Native Scaling | Queued | Profiling, SIMD vectorization, memory optimization |
+| **M8** | Scientific Benchmarking & Statistical Evaluation | **Completed** | Multi-seed IQM, ablation studies, throughput profiling |
+| **M9** | Systems Performance & Native Scaling | **Active** | Profiling, SIMD vectorization, memory optimization |
 | **M10** | Publication-Grade Paper & Artifacts | Queued | LaTeX paper, appendices, reproducible manifests |
 
 ---
@@ -105,22 +105,25 @@ This roadmap outlines the sequenced progression of AURORA from bootstrap to publ
   - Benchmark harness (`benchmarks/benchmark_aurora.py`) evaluating AURORA vs. MBPO vs. SAC.
 - **Acceptance Criteria:** 100% test pass rate across pytest (112/112) and GoogleTest (66/66 on GCC and Clang).
 
-### M8: Scientific Benchmarking & Statistical Evaluation (Active)
+### M8: Scientific Benchmarking & Statistical Evaluation (Completed)
 - **Goal:** Rigorous statistical evaluation across multi-tier environments and ablation studies.
 - **Deliverables:**
-  - Multi-seed benchmark protocol with aggregate performance profiles (Interquartile Mean, bootstrap CIs).
-  - Systematic ablation studies (dissecting adaptive horizon, dynamic blending, and pessimistic penalty).
-  - Benchmark suite across classic control and continuous control tasks.
-  - Automated figure, curve, and table generation infrastructure.
-- **Acceptance Criteria:** Statistically grounded comparisons under fair interaction and compute budgets.
+  - Formal protocol in `docs/mathematics/statistical_evaluation.md`.
+  - Python evaluation module (`evaluation/metrics.py`, `profiles.py`, `significance.py`, `manifest.py`, `plotting.py`).
+  - Declarative experiment configs in `configs/` (`pendulum_aurora`, `pendulum_mbpo`, ablations).
+  - Reproducible multi-seed runner (`experiments/runner.py`) and ablation study suite (`experiments/ablation_study.py`).
+  - Native C++23 peers in `cpp/include/aurora/statistical_evaluation.hpp` and `cpp/src/statistical_evaluation.cpp`.
+  - Parity test suite (`tests/parity/test_evaluation_parity.py`) verifying $< 10^{-10}$ error.
+  - Automated visualization (`results/ablation/performance_profiles.png`).
+- **Acceptance Criteria:** 100% test pass rate across pytest (123/123) and GoogleTest (70/70 on GCC and Clang).
 
-### M9: Scientific Benchmarking & Systems Analysis
-- **Goal:** Rigorous statistical evaluation across multi-tier environments.
+### M9: Systems Performance & Native Scaling (Active)
+- **Goal:** Systems profiling, simulation throughput maximization, and native C++23 execution scaling.
 - **Deliverables:**
-  - Multi-seed runs (IQM, bootstrap confidence intervals, performance profiles).
-  - Systems throughput breakdown: env steps/s, world model steps/s, planning decisions/s.
-  - Ablation suite (AURORA full vs. -uncertainty, -adaptive horizon, -pessimism, -active data).
-- **Acceptance Criteria:** Statistically grounded comparisons under fair interaction and compute budgets.
+  - Detailed flamegraph and bottleneck profiling (environment step, dynamics inference, policy update).
+  - Trajectory throughput benchmarks (steps/sec) comparing Python and C++23 native implementations.
+  - Native memory locality and SIMD vectorization optimizations.
+- **Acceptance Criteria:** Quantifiable speedup and latency reduction without compromising numerical parity.
 
 ### M10: Research Paper & Publication Artifacts
 - **Goal:** Complete, publication-ready research paper package.

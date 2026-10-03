@@ -1,0 +1,39 @@
+{
+  "experiment_name": "pendulum_aurora",
+  "environment": {
+    "name": "Pendulum",
+    "obs_dim": 3,
+    "action_dim": 1,
+    "max_steps": 200
+  },
+  "agent": {
+    "type": "AURORA",
+    "ensemble_size": 3,
+    "ensemble_hidden_dims": [48, 48],
+    "actor_hidden_dims": [48, 48],
+    "critic_hidden_dims": [48, 48],
+    "horizon_max": 8,
+    "horizon_min": 1,
+    "tau_base": 0.4,
+    "kappa": 1.0,
+    "budget_max": 2.0,
+    "beta_pess": 0.5,
+    "eta_max": 0.85,
+    "u_target": 0.4,
+    "adaptive_horizon": true,
+    "dynamic_blending": true,
+    "pessimistic_penalty": true
+  },
+  "training": {
+    "env_steps": 300,
+    "warmup_steps": 50,
+    "model_train_freq": 20,
+    "model_epochs": 2,
+    "num_rollouts": 15,
+    "policy_batch_size": 32
+  },
+  "evaluation": {
+    "eval_freq": 100,
+    "eval_episodes": 3
+  }
+}

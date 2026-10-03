@@ -10,6 +10,7 @@
 #include "aurora/world_model.hpp"
 #include "aurora/reproductions.hpp"
 #include "aurora/aurora_algorithm.hpp"
+#include "aurora/statistical_evaluation.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -353,6 +354,15 @@ int main(int argc, char** argv) {
     } else if (req.op == "aurora_pessimistic_value") {
         double beta_pess = (inps.size() > 3) ? inps[3]->item() : 0.5;
         out = algorithm::compute_pessimistic_value(inps[0], inps[1], inps[2], beta_pess);
+    } else if (req.op == "eval_iqm") {
+        double val = evaluation::compute_iqm(inps[0]->to_vector());
+        out = Tensor::create({1}, val, false);
+    } else if (req.op == "eval_probability_of_improvement") {
+        double val = evaluation::probability_of_improvement(inps[0]->to_vector(), inps[1]->to_vector());
+        out = Tensor::create({1}, val, false);
+    } else if (req.op == "eval_performance_profile") {
+        auto prof = evaluation::performance_profile(inps[0]->to_vector(), inps[1]->to_vector());
+        out = Tensor::create({prof.size()}, prof, false);
     } else {
         std::cerr << "Unknown op: " << req.op << "\n";
         return 1;

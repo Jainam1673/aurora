@@ -72,6 +72,7 @@ add_library(aurora_core
     cpp/src/world_model.cpp
     cpp/src/reproductions.cpp
     cpp/src/aurora_algorithm.cpp
+    cpp/src/statistical_evaluation.cpp
 )
 add_library(aurora::core ALIAS aurora_core)
 
@@ -223,6 +224,17 @@ if(AURORA_BUILD_TESTS)
             GTest::gtest_main
     )
     gtest_discover_tests(aurora_cpp_aurora_test)
+
+    # Scientific Benchmarking & Statistical Evaluation Test
+    add_executable(aurora_cpp_evaluation_test
+        tests/cpp/test_evaluation.cpp
+    )
+    target_link_libraries(aurora_cpp_evaluation_test
+        PRIVATE
+            aurora::core
+            GTest::gtest_main
+    )
+    gtest_discover_tests(aurora_cpp_evaluation_test)
 endif()
 
 

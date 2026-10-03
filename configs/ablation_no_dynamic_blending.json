@@ -1,0 +1,36 @@
+{
+  "experiment_name": "ablation_no_dynamic_blending",
+  "environment": {
+    "name": "Pendulum",
+    "obs_dim": 3,
+    "action_dim": 1,
+    "max_steps": 200
+  },
+  "agent": {
+    "type": "AURORA-NoDynamicBlending",
+    "ensemble_size": 3,
+    "ensemble_hidden_dims": [48, 48],
+    "actor_hidden_dims": [48, 48],
+    "critic_hidden_dims": [48, 48],
+    "horizon_max": 8,
+    "horizon_min": 1,
+    "tau_base": 0.4,
+    "beta_pess": 0.5,
+    "eta_max": 0.5,
+    "adaptive_horizon": true,
+    "dynamic_blending": false,
+    "pessimistic_penalty": true
+  },
+  "training": {
+    "env_steps": 300,
+    "warmup_steps": 50,
+    "model_train_freq": 20,
+    "model_epochs": 2,
+    "num_rollouts": 15,
+    "policy_batch_size": 32
+  },
+  "evaluation": {
+    "eval_freq": 100,
+    "eval_episodes": 3
+  }
+}

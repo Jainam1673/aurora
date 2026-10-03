@@ -1,7 +1,7 @@
-## Current Milestone: M7 — Novel AURORA Algorithm: Uncertainty-Calibrated Rollouts & Optimization (Completed)
+## Current Milestone: M8 — Scientific Benchmarking & Statistical Evaluation (Completed)
 
 **Overall Health:** GREEN  
-**Target Milestone:** M7 (Complete) $\to$ Transitioning to M8 (Scientific Benchmarking, Statistical Evaluation & Verification)  
+**Target Milestone:** M8 (Complete) $\to$ Transitioning to M9 (Systems Performance, Profiling & Native Scaling)  
 **Last Updated:** 2026-10-03  
 
 ---
@@ -173,20 +173,42 @@
 - [x] **Empirical Benchmark Suite**:
   - `benchmarks/benchmark_aurora.py` evaluating comparative performance across AURORA (Adaptive), MBPO (Fixed Horizon H=4), and Model-Free SAC on Continuous Control.
 
+### Milestone M8: Scientific Benchmarking & Statistical Evaluation
+- [x] **Theoretical & Statistical Protocol**:
+  - Formal specification in `docs/mathematics/statistical_evaluation.md`: Interquartile Mean (IQM), Stratified Bootstrap Confidence Intervals (95% CI), Performance Profiles, Probability of Improvement $P(X > Y)$, Welch's two-sample $t$-test, and component ablation definitions.
+- [x] **Python Statistical Evaluation Suite**:
+  - `evaluation/metrics.py`: `compute_iqm`, `bootstrap_ci`, `compute_statistical_summary`, `StatisticalSummary`.
+  - `evaluation/profiles.py`: `performance_profile` CDF generator and `probability_of_improvement`.
+  - `evaluation/significance.py`: `welch_t_test` and `mann_whitney_u_test`.
+  - `evaluation/manifest.py`: `create_experiment_manifest` and `save_manifest` for immutable git/compiler/hardware audit trails.
+  - `evaluation/plotting.py`: `plot_performance_profiles`, `format_ascii_table`.
+- [x] **Declarative Experiment Configs & Runner**:
+  - `configs/pendulum_aurora.json`, `configs/pendulum_mbpo.json`, `configs/ablation_no_adaptive_horizon.json`, `configs/ablation_no_dynamic_blending.json`, `configs/ablation_no_pessimism.json`.
+  - `experiments/runner.py`: multi-seed experiment execution harness capturing manifests and periodic evaluations.
+  - `experiments/ablation_study.py`: systematic 4-condition multi-seed ablation evaluation suite outputting JSON manifests and publication-ready tables.
+- [x] **C++23 Native Peer Implementation**:
+  - `cpp/include/aurora/statistical_evaluation.hpp` and `cpp/src/statistical_evaluation.cpp`: native `compute_iqm`, `bootstrap_ci`, `probability_of_improvement`, and `performance_profile`.
+  - Registered to `aurora_core` and `aurora_parity_runner`.
+- [x] **Cross-Language Numerical Parity**:
+  - `tests/parity/test_evaluation_parity.py` asserting $< 10^{-10}$ error on IQM, probability of improvement, and performance profiles.
+- [x] **Unit & Verification Suites**:
+  - `tests/python/test_evaluation.py` (8/8 passed).
+  - `tests/cpp/test_evaluation.cpp` (4/4 passed).
+
 ---
 
 ## 3. Verified Artifacts & Test Results
 
 ### C++23 Native Build & GoogleTests
 - **GCC 16.2.1 (`ctest --preset debug`):**
-  - **66/66 passed (100%)** in `0.57s`.
-  - Targets: `aurora_cpp_smoke_test`, `aurora_cpp_tensor_test`, `aurora_cpp_gradcheck_test`, `aurora_cpp_nn_test`, `aurora_cpp_optim_test`, `aurora_cpp_transformer_test`, `aurora_cpp_rl_test`, `aurora_cpp_world_model_test`, `aurora_cpp_reproductions_test`, `aurora_cpp_aurora_test`.
+  - **70/70 passed (100%)** in `0.61s`.
+  - Targets: `aurora_cpp_smoke_test`, `aurora_cpp_tensor_test`, `aurora_cpp_gradcheck_test`, `aurora_cpp_nn_test`, `aurora_cpp_optim_test`, `aurora_cpp_transformer_test`, `aurora_cpp_rl_test`, `aurora_cpp_world_model_test`, `aurora_cpp_reproductions_test`, `aurora_cpp_aurora_test`, `aurora_cpp_evaluation_test`.
 - **Clang 22.1.8 (`ctest --preset clang-debug`):**
-  - **66/66 passed (100%)** in `0.52s` with **zero warnings** under `-Wall -Wextra -Wpedantic -Wshadow -Wconversion`.
+  - **70/70 passed (100%)** in `0.54s` with **zero warnings** under `-Wall -Wextra -Wpedantic -Wshadow -Wconversion`.
 
 ### Python 3.14 Test Suite (`pytest`)
 - Command: `uv run pytest`
-- **112/112 passed (100%)** in `5.74s`:
+- **123/123 passed (100%)** in `7.86s`:
   - `tests/python/test_smoke.py`: 3 passed
   - `tests/python/test_tensor.py`: 7 passed
   - `tests/python/test_gradcheck.py`: 14 passed
@@ -196,29 +218,31 @@
   - `tests/python/test_transformer.py`: 9 passed
   - `tests/python/test_rl.py`: 11 passed
   - `tests/python/test_world_model.py`: 12 passed
-  - `tests/python/test_reproductions.py`: 5 passed (MBPO, Dreamer, TD-MPC, MuZero, Decision Transformer)
-  - `tests/python/test_aurora_algorithm.py`: 6 passed (Adaptive Horizon, Dynamic Blending, AURORAAgent Workflow)
+  - `tests/python/test_reproductions.py`: 5 passed
+  - `tests/python/test_aurora_algorithm.py`: 6 passed
+  - `tests/python/test_evaluation.py`: 8 passed
   - `tests/parity/test_numerical_parity.py`: 10 passed
   - `tests/parity/test_checkpoint_parity.py`: 2 passed
   - `tests/parity/test_transformer_parity.py`: 2 passed
   - `tests/parity/test_rl_parity.py`: 6 passed
   - `tests/parity/test_world_model_parity.py`: 4 passed
   - `tests/parity/test_reproductions_parity.py`: 2 passed
-  - `tests/parity/test_aurora_parity.py`: 3 passed (< 1e-10 error)
+  - `tests/parity/test_aurora_parity.py`: 3 passed
+  - `tests/parity/test_evaluation_parity.py`: 3 passed
 
 ### Code Quality & Static Analysis
-- **Ruff:** `All checks passed!` across 62 source files.
-- **Ruff Format:** `62 files already formatted`.
-- **Mypy:** `Success: no issues found in 41 source files` (`mypy --strict`).
+- **Ruff:** `All checks passed!` across 73 source files.
+- **Ruff Format:** `73 files already formatted`.
+- **Mypy:** `Success: no issues found in 50 source files` (`mypy --strict`).
 
 ---
 
-## 4. Next Milestone: M8 — Scientific Benchmarking & Statistical Evaluation
+## 4. Next Milestone: M9 — Systems Performance, Profiling & Native Scaling
 
-Primary objectives for M8:
-1. Multi-seed statistical benchmark protocol with aggregate performance profiles (IQM, bootstrap CIs).
-2. Systematic ablation studies (dissecting adaptive horizon, dynamic blending, and pessimistic penalty).
-3. Benchmark suite across classic control and continuous state tasks.
-4. Experiment logging, automated visualization, and manifest tracking infrastructure.
+Primary objectives for M9:
+1. Systems performance profiling identifying execution bottlenecks across simulation, dynamics learning, and planning.
+2. Native C++23 trajectory throughput benchmarking (env steps/s, model predictions/s, policy updates/s).
+3. Memory footprint and cache locality optimization.
+4. Modular multi-threaded simulation and rollout scaling.
 
 

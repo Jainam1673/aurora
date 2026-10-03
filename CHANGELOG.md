@@ -96,4 +96,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cross-language numerical parity suite (`tests/parity/test_aurora_parity.py`: 3/3 passed) asserting $< 10^{-10}$ error on adaptive horizon scheduling, dynamic blending ratios, and pessimistic value penalties.
   - Empirical benchmark suite (`benchmarks/benchmark_aurora.py`) comparing AURORA vs. MBPO vs. SAC on Continuous Control.
   - ADR-011: Novel AURORA Algorithm Architecture (Uncertainty-Calibrated Adaptive Imagination & Dynamic Blending).
+- **M8 Scientific Benchmarking & Statistical Evaluation**:
+  - Statistical evaluation protocol specification in `docs/mathematics/statistical_evaluation.md`: Interquartile Mean (IQM), Stratified Bootstrap Confidence Intervals (95% CI), Performance Profiles, Probability of Improvement $P(X > Y)$, Welch's $t$-test, and component ablation definitions.
+  - Python evaluation module `evaluation/`:
+    - `evaluation/metrics.py`: `compute_iqm`, `bootstrap_ci`, `compute_statistical_summary`, `StatisticalSummary`.
+    - `evaluation/profiles.py`: `performance_profile` and `probability_of_improvement`.
+    - `evaluation/significance.py`: `welch_t_test` and `mann_whitney_u_test`.
+    - `evaluation/manifest.py`: `create_experiment_manifest` and `save_manifest` recording git commit, dirty flag, Python/compiler versions, exact hyperparameters, and hardware specs.
+    - `evaluation/plotting.py`: `plot_performance_profiles`, `format_ascii_table`.
+  - Declarative experiment configs in `configs/`: `pendulum_aurora.json`, `pendulum_mbpo.json`, `ablation_no_adaptive_horizon.json`, `ablation_no_dynamic_blending.json`, `ablation_no_pessimism.json`.
+  - Reproducible multi-seed runner (`experiments/runner.py`) and systematic component ablation study suite (`experiments/ablation_study.py`).
+  - Native C++23 peers: `cpp/include/aurora/statistical_evaluation.hpp` and `cpp/src/statistical_evaluation.cpp` (`compute_iqm`, `bootstrap_ci`, `probability_of_improvement`, `performance_profile`).
+  - Python unit test suite: `tests/python/test_evaluation.py` (8/8 passed, 123/123 repo total).
+  - C++23 GoogleTest suite: `tests/cpp/test_evaluation.cpp` (4/4 passed, 70/70 repo total on GCC and Clang).
+  - Cross-language numerical parity suite: `tests/parity/test_evaluation_parity.py` (3/3 passed) asserting $< 10^{-10}$ error on IQM, probability of improvement, and performance profiles.
+  - Automated visualization: `results/ablation/performance_profiles.png`.
+  - ADR-012: Scientific Benchmarking, Stratified Statistical Evaluation, and Ablation Methodology.
 
