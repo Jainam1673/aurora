@@ -237,4 +237,15 @@ if(AURORA_BUILD_TESTS)
     gtest_discover_tests(aurora_cpp_evaluation_test)
 endif()
 
+# Benchmarks
+if(AURORA_BUILD_BENCHMARKS)
+    add_executable(aurora_benchmark_throughput
+        benchmarks/cpp/benchmark_throughput.cpp
+    )
+    target_link_libraries(aurora_benchmark_throughput
+        PRIVATE
+            aurora::core
+    )
+endif()
+
 

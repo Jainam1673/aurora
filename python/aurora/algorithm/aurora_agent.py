@@ -263,10 +263,12 @@ class AURORAAgent:
 
             active_states = curr_states[active_indices]
 
-            # Generate actions under actor policy
-            actions = np.zeros((len(active_indices), self.action_dim), dtype=np.float64)
-            for i, s in enumerate(active_states):
-                actions[i] = self.actor.act(s, deterministic=False)
+            # Generate actions under actor policy (vectorized batch evaluation)
+            act_res = self.actor.act(active_states, deterministic=False)
+            if act_res.ndim == 2:
+                actions = act_res
+            else:
+                actions = act_res.reshape(len(active_indices), self.action_dim)
 
             # Predict dynamics and compute epistemic uncertainty
             next_states, rewards, _ = self.dynamics.predict(active_states, actions)

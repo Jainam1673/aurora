@@ -34,7 +34,9 @@ std::shared_ptr<Tensor> Categorical::sample(uint64_t seed) {
     }
 
     std::vector<size_t> out_shape = probs_->shape();
-    out_shape.pop_back();
+    if (!out_shape.empty()) {
+        out_shape.pop_back();
+    }
     if (out_shape.empty()) {
         out_shape = {1};
     }

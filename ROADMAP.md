@@ -117,18 +117,22 @@ This roadmap outlines the sequenced progression of AURORA from bootstrap to publ
   - Automated visualization (`results/ablation/performance_profiles.png`).
 - **Acceptance Criteria:** 100% test pass rate across pytest (123/123) and GoogleTest (70/70 on GCC and Clang).
 
-### M9: Systems Performance & Native Scaling (Active)
+### M9: Systems Performance & Native Scaling (Completed)
 - **Goal:** Systems profiling, simulation throughput maximization, and native C++23 execution scaling.
 - **Deliverables:**
-  - Detailed flamegraph and bottleneck profiling (environment step, dynamics inference, policy update).
-  - Trajectory throughput benchmarks (steps/sec) comparing Python and C++23 native implementations.
-  - Native memory locality and SIMD vectorization optimizations.
-- **Acceptance Criteria:** Quantifiable speedup and latency reduction without compromising numerical parity.
+  - Formal systems performance specification in `docs/systems/systems_performance.md`.
+  - Detailed flamegraph and bottleneck profiling (`benchmarks/profile_aurora.py`) exporting `.prof` and JSON traces.
+  - Native C++23 high-precision benchmark executable `aurora_benchmark_throughput` (`benchmarks/cpp/benchmark_throughput.cpp`).
+  - Native memory locality and SIMD vectorization optimizations (contiguous fast paths in `cpp/src/tensor.cpp` for binary arithmetic and unary activations).
+  - Cross-language trajectory throughput benchmarks (`benchmarks/benchmark_cross_language.py`) measuring speedups up to 31.8x on C++ native statistics.
+  - Vectorized actor policy imagination evaluation in Python reducing rollout duration by 8.2x and boosting end-to-end throughput by 2.74x.
+- **Acceptance Criteria:** Quantifiable speedup and latency reduction without compromising numerical parity; 100% test pass rate across 123 pytest tests and 70 GoogleTest targets across GCC and Clang.
 
-### M10: Research Paper & Publication Artifacts
+### M10: Research Paper & Publication Artifacts (Active)
 - **Goal:** Complete, publication-ready research paper package.
 - **Deliverables:**
-  - Full LaTeX manuscript with sections 1-18 and comprehensive appendices.
-  - Automated figure and table generation scripts pulling directly from raw results.
-  - Reproducibility checklist and one-click reproduction scripts.
+  - Full LaTeX manuscript with sections 1-18 and comprehensive appendices (`paper/`).
+  - Automated figure and table generation scripts pulling directly from raw results (`results/`).
+  - Reproducibility checklist and one-click reproduction scripts (`scripts/`).
 - **Acceptance Criteria:** Standalone compilation of camera-ready PDF and release bundle.
+

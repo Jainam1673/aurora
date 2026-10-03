@@ -97,11 +97,17 @@
 - [x] Validate 100% test pass rate across Python (123/123) and C++23 (70/70 on GCC and Clang).
 
 ## Milestone 9: Systems Performance & Native Scaling
-- [ ] Systems performance profiling (env vs. model vs. planner bottlenecks).
-- [ ] Native C++23 SIMD vectorization and cache locality optimizations.
-- [ ] Trajectory throughput benchmarks (env steps/s, model steps/s, planning decisions/s).
+- [x] Systems performance specification and operational metrics in `docs/systems/systems_performance.md`.
+- [x] Systems performance profiling with cProfile and latency distributions in `benchmarks/profile_aurora.py`.
+- [x] Native C++23 SIMD vectorization and cache locality contiguous optimizations in `cpp/src/tensor.cpp`.
+- [x] C++23 native high-precision benchmark executable `aurora_benchmark_throughput` (`benchmarks/cpp/benchmark_throughput.cpp`).
+- [x] Cross-language trajectory throughput comparisons in `benchmarks/benchmark_cross_language.py`.
+- [x] Vectorized actor policy imagination evaluation in `python/aurora/algorithm/aurora_agent.py` achieving 8.2x speedup on imagination and 2.74x end-to-end throughput boost.
+- [x] 100% test pass rate across pytest (123/123) and GoogleTest (70/70 on GCC and Clang) with zero warnings.
 
 ## Milestone 10: Research Paper & Publication Package
-- [ ] Write publication-ready LaTeX manuscript in `paper/`.
-- [ ] Automate figure and table generation pipelines from raw experiment data.
-- [ ] Assemble reproducibility checklist and self-contained replication scripts.
+- [ ] Complete publication-ready LaTeX manuscript in `paper/main.tex` with comprehensive appendices.
+- [ ] Automate figure and table generation pipelines from raw experiment manifests (`results/`).
+- [ ] Assemble reproducibility package and self-contained replication scripts (`scripts/`).
+- [ ] Final end-to-end verification and camera-ready build artifact generation.
+

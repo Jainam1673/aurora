@@ -196,22 +196,44 @@ std::shared_ptr<Tensor> Tensor::add(const std::shared_ptr<Tensor>& other) const 
     size_t total = std::accumulate(out_shape.begin(), out_shape.end(), size_t{1}, std::multiplies<size_t>());
     std::vector<double> out_data(total);
 
-    auto c_strides = compute_c_strides(out_shape);
-
-    for (size_t idx = 0; idx < total; ++idx) {
-        size_t rem = idx;
-        size_t off_a = offset_;
-        size_t off_b = other->offset_;
-
-        for (size_t d = 0; d < out_shape.size(); ++d) {
-            size_t c_s = (d + 1 < out_shape.size()) ? c_strides[d] : 1;
-            size_t coord = rem / c_s;
-            rem %= c_s;
-            off_a += coord * s_a[d];
-            off_b += coord * s_b[d];
+    if (shape_ == other->shape() && is_contiguous() && other->is_contiguous()) {
+        const double* a_ptr = data();
+        const double* b_ptr = other->data();
+        double* out_ptr = out_data.data();
+        for (size_t idx = 0; idx < total; ++idx) {
+            out_ptr[idx] = a_ptr[idx] + b_ptr[idx];
         }
+    } else if (is_contiguous() && other->numel() == 1) {
+        const double* a_ptr = data();
+        double b_val = (*other->storage_)[other->offset_];
+        double* out_ptr = out_data.data();
+        for (size_t idx = 0; idx < total; ++idx) {
+            out_ptr[idx] = a_ptr[idx] + b_val;
+        }
+    } else if (other->is_contiguous() && numel() == 1) {
+        double a_val = (*storage_)[offset_];
+        const double* b_ptr = other->data();
+        double* out_ptr = out_data.data();
+        for (size_t idx = 0; idx < total; ++idx) {
+            out_ptr[idx] = a_val + b_ptr[idx];
+        }
+    } else {
+        auto c_strides = compute_c_strides(out_shape);
+        for (size_t idx = 0; idx < total; ++idx) {
+            size_t rem = idx;
+            size_t off_a = offset_;
+            size_t off_b = other->offset_;
 
-        out_data[idx] = (*storage_)[off_a] + (*other->storage_)[off_b];
+            for (size_t d = 0; d < out_shape.size(); ++d) {
+                size_t c_s = (d + 1 < out_shape.size()) ? c_strides[d] : 1;
+                size_t coord = rem / c_s;
+                rem %= c_s;
+                off_a += coord * s_a[d];
+                off_b += coord * s_b[d];
+            }
+
+            out_data[idx] = (*storage_)[off_a] + (*other->storage_)[off_b];
+        }
     }
 
     bool req = requires_grad_ || other->requires_grad_;
@@ -230,22 +252,45 @@ std::shared_ptr<Tensor> Tensor::sub(const std::shared_ptr<Tensor>& other) const 
 
     size_t total = std::accumulate(out_shape.begin(), out_shape.end(), size_t{1}, std::multiplies<size_t>());
     std::vector<double> out_data(total);
-    auto c_strides = compute_c_strides(out_shape);
 
-    for (size_t idx = 0; idx < total; ++idx) {
-        size_t rem = idx;
-        size_t off_a = offset_;
-        size_t off_b = other->offset_;
-
-        for (size_t d = 0; d < out_shape.size(); ++d) {
-            size_t c_s = (d + 1 < out_shape.size()) ? c_strides[d] : 1;
-            size_t coord = rem / c_s;
-            rem %= c_s;
-            off_a += coord * s_a[d];
-            off_b += coord * s_b[d];
+    if (shape_ == other->shape() && is_contiguous() && other->is_contiguous()) {
+        const double* a_ptr = data();
+        const double* b_ptr = other->data();
+        double* out_ptr = out_data.data();
+        for (size_t idx = 0; idx < total; ++idx) {
+            out_ptr[idx] = a_ptr[idx] - b_ptr[idx];
         }
+    } else if (is_contiguous() && other->numel() == 1) {
+        const double* a_ptr = data();
+        double b_val = (*other->storage_)[other->offset_];
+        double* out_ptr = out_data.data();
+        for (size_t idx = 0; idx < total; ++idx) {
+            out_ptr[idx] = a_ptr[idx] - b_val;
+        }
+    } else if (other->is_contiguous() && numel() == 1) {
+        double a_val = (*storage_)[offset_];
+        const double* b_ptr = other->data();
+        double* out_ptr = out_data.data();
+        for (size_t idx = 0; idx < total; ++idx) {
+            out_ptr[idx] = a_val - b_ptr[idx];
+        }
+    } else {
+        auto c_strides = compute_c_strides(out_shape);
+        for (size_t idx = 0; idx < total; ++idx) {
+            size_t rem = idx;
+            size_t off_a = offset_;
+            size_t off_b = other->offset_;
 
-        out_data[idx] = (*storage_)[off_a] - (*other->storage_)[off_b];
+            for (size_t d = 0; d < out_shape.size(); ++d) {
+                size_t c_s = (d + 1 < out_shape.size()) ? c_strides[d] : 1;
+                size_t coord = rem / c_s;
+                rem %= c_s;
+                off_a += coord * s_a[d];
+                off_b += coord * s_b[d];
+            }
+
+            out_data[idx] = (*storage_)[off_a] - (*other->storage_)[off_b];
+        }
     }
 
     bool req = requires_grad_ || other->requires_grad_;
@@ -264,22 +309,45 @@ std::shared_ptr<Tensor> Tensor::mul(const std::shared_ptr<Tensor>& other) const 
 
     size_t total = std::accumulate(out_shape.begin(), out_shape.end(), size_t{1}, std::multiplies<size_t>());
     std::vector<double> out_data(total);
-    auto c_strides = compute_c_strides(out_shape);
 
-    for (size_t idx = 0; idx < total; ++idx) {
-        size_t rem = idx;
-        size_t off_a = offset_;
-        size_t off_b = other->offset_;
-
-        for (size_t d = 0; d < out_shape.size(); ++d) {
-            size_t c_s = (d + 1 < out_shape.size()) ? c_strides[d] : 1;
-            size_t coord = rem / c_s;
-            rem %= c_s;
-            off_a += coord * s_a[d];
-            off_b += coord * s_b[d];
+    if (shape_ == other->shape() && is_contiguous() && other->is_contiguous()) {
+        const double* a_ptr = data();
+        const double* b_ptr = other->data();
+        double* out_ptr = out_data.data();
+        for (size_t idx = 0; idx < total; ++idx) {
+            out_ptr[idx] = a_ptr[idx] * b_ptr[idx];
         }
+    } else if (is_contiguous() && other->numel() == 1) {
+        const double* a_ptr = data();
+        double b_val = (*other->storage_)[other->offset_];
+        double* out_ptr = out_data.data();
+        for (size_t idx = 0; idx < total; ++idx) {
+            out_ptr[idx] = a_ptr[idx] * b_val;
+        }
+    } else if (other->is_contiguous() && numel() == 1) {
+        double a_val = (*storage_)[offset_];
+        const double* b_ptr = other->data();
+        double* out_ptr = out_data.data();
+        for (size_t idx = 0; idx < total; ++idx) {
+            out_ptr[idx] = a_val * b_ptr[idx];
+        }
+    } else {
+        auto c_strides = compute_c_strides(out_shape);
+        for (size_t idx = 0; idx < total; ++idx) {
+            size_t rem = idx;
+            size_t off_a = offset_;
+            size_t off_b = other->offset_;
 
-        out_data[idx] = (*storage_)[off_a] * (*other->storage_)[off_b];
+            for (size_t d = 0; d < out_shape.size(); ++d) {
+                size_t c_s = (d + 1 < out_shape.size()) ? c_strides[d] : 1;
+                size_t coord = rem / c_s;
+                rem %= c_s;
+                off_a += coord * s_a[d];
+                off_b += coord * s_b[d];
+            }
+
+            out_data[idx] = (*storage_)[off_a] * (*other->storage_)[off_b];
+        }
     }
 
     bool req = requires_grad_ || other->requires_grad_;
@@ -298,22 +366,38 @@ std::shared_ptr<Tensor> Tensor::div(const std::shared_ptr<Tensor>& other) const 
 
     size_t total = std::accumulate(out_shape.begin(), out_shape.end(), size_t{1}, std::multiplies<size_t>());
     std::vector<double> out_data(total);
-    auto c_strides = compute_c_strides(out_shape);
 
-    for (size_t idx = 0; idx < total; ++idx) {
-        size_t rem = idx;
-        size_t off_a = offset_;
-        size_t off_b = other->offset_;
-
-        for (size_t d = 0; d < out_shape.size(); ++d) {
-            size_t c_s = (d + 1 < out_shape.size()) ? c_strides[d] : 1;
-            size_t coord = rem / c_s;
-            rem %= c_s;
-            off_a += coord * s_a[d];
-            off_b += coord * s_b[d];
+    if (shape_ == other->shape() && is_contiguous() && other->is_contiguous()) {
+        const double* a_ptr = data();
+        const double* b_ptr = other->data();
+        double* out_ptr = out_data.data();
+        for (size_t idx = 0; idx < total; ++idx) {
+            out_ptr[idx] = a_ptr[idx] / b_ptr[idx];
         }
+    } else if (is_contiguous() && other->numel() == 1) {
+        const double* a_ptr = data();
+        double b_val = (*other->storage_)[other->offset_];
+        double* out_ptr = out_data.data();
+        for (size_t idx = 0; idx < total; ++idx) {
+            out_ptr[idx] = a_ptr[idx] / b_val;
+        }
+    } else {
+        auto c_strides = compute_c_strides(out_shape);
+        for (size_t idx = 0; idx < total; ++idx) {
+            size_t rem = idx;
+            size_t off_a = offset_;
+            size_t off_b = other->offset_;
 
-        out_data[idx] = (*storage_)[off_a] / (*other->storage_)[off_b];
+            for (size_t d = 0; d < out_shape.size(); ++d) {
+                size_t c_s = (d + 1 < out_shape.size()) ? c_strides[d] : 1;
+                size_t coord = rem / c_s;
+                rem %= c_s;
+                off_a += coord * s_a[d];
+                off_b += coord * s_b[d];
+            }
+
+            out_data[idx] = (*storage_)[off_a] / (*other->storage_)[off_b];
+        }
     }
 
     bool req = requires_grad_ || other->requires_grad_;
@@ -453,8 +537,16 @@ std::shared_ptr<Tensor> Tensor::sum(std::optional<int> axis, bool keepdims) cons
     if (!axis.has_value()) {
         // Full sum to scalar
         double total = 0.0;
-        for (size_t i = 0; i < numel(); ++i) {
-            total += (*this)[i];
+        if (is_contiguous()) {
+            const double* ptr = data();
+            size_t n = numel();
+            for (size_t i = 0; i < n; ++i) {
+                total += ptr[i];
+            }
+        } else {
+            for (size_t i = 0; i < numel(); ++i) {
+                total += (*this)[i];
+            }
         }
         std::vector<size_t> out_shape = keepdims ? std::vector<size_t>(ndim(), 1) : std::vector<size_t>{};
         auto result = std::make_shared<Tensor>(out_shape, total, requires_grad_);
@@ -536,9 +628,18 @@ std::shared_ptr<Tensor> Tensor::mean(std::optional<int> axis, bool keepdims) con
 }
 
 std::shared_ptr<Tensor> Tensor::exp() const {
-    std::vector<double> out(numel());
-    for (size_t i = 0; i < numel(); ++i) {
-        out[i] = std::exp((*this)[i]);
+    size_t n = numel();
+    std::vector<double> out(n);
+    if (is_contiguous()) {
+        const double* in_ptr = data();
+        double* out_ptr = out.data();
+        for (size_t i = 0; i < n; ++i) {
+            out_ptr[i] = std::exp(in_ptr[i]);
+        }
+    } else {
+        for (size_t i = 0; i < n; ++i) {
+            out[i] = std::exp((*this)[i]);
+        }
     }
     auto result = std::make_shared<Tensor>(shape_, std::move(out), requires_grad_);
     if (requires_grad_) {
@@ -550,9 +651,18 @@ std::shared_ptr<Tensor> Tensor::exp() const {
 }
 
 std::shared_ptr<Tensor> Tensor::log() const {
-    std::vector<double> out(numel());
-    for (size_t i = 0; i < numel(); ++i) {
-        out[i] = std::log((*this)[i]);
+    size_t n = numel();
+    std::vector<double> out(n);
+    if (is_contiguous()) {
+        const double* in_ptr = data();
+        double* out_ptr = out.data();
+        for (size_t i = 0; i < n; ++i) {
+            out_ptr[i] = std::log(in_ptr[i]);
+        }
+    } else {
+        for (size_t i = 0; i < n; ++i) {
+            out[i] = std::log((*this)[i]);
+        }
     }
     auto result = std::make_shared<Tensor>(shape_, std::move(out), requires_grad_);
     if (requires_grad_) {
@@ -564,9 +674,18 @@ std::shared_ptr<Tensor> Tensor::log() const {
 }
 
 std::shared_ptr<Tensor> Tensor::sqrt() const {
-    std::vector<double> out(numel());
-    for (size_t i = 0; i < numel(); ++i) {
-        out[i] = std::sqrt((*this)[i]);
+    size_t n = numel();
+    std::vector<double> out(n);
+    if (is_contiguous()) {
+        const double* in_ptr = data();
+        double* out_ptr = out.data();
+        for (size_t i = 0; i < n; ++i) {
+            out_ptr[i] = std::sqrt(in_ptr[i]);
+        }
+    } else {
+        for (size_t i = 0; i < n; ++i) {
+            out[i] = std::sqrt((*this)[i]);
+        }
     }
     auto result = std::make_shared<Tensor>(shape_, std::move(out), requires_grad_);
     if (requires_grad_) {
@@ -578,10 +697,20 @@ std::shared_ptr<Tensor> Tensor::sqrt() const {
 }
 
 std::shared_ptr<Tensor> Tensor::relu() const {
-    std::vector<double> out(numel());
-    for (size_t i = 0; i < numel(); ++i) {
-        double v = (*this)[i];
-        out[i] = (v > 0.0) ? v : 0.0;
+    size_t n = numel();
+    std::vector<double> out(n);
+    if (is_contiguous()) {
+        const double* in_ptr = data();
+        double* out_ptr = out.data();
+        for (size_t i = 0; i < n; ++i) {
+            double v = in_ptr[i];
+            out_ptr[i] = (v > 0.0) ? v : 0.0;
+        }
+    } else {
+        for (size_t i = 0; i < n; ++i) {
+            double v = (*this)[i];
+            out[i] = (v > 0.0) ? v : 0.0;
+        }
     }
     auto result = std::make_shared<Tensor>(shape_, std::move(out), requires_grad_);
     if (requires_grad_) {
@@ -593,12 +722,23 @@ std::shared_ptr<Tensor> Tensor::relu() const {
 }
 
 std::shared_ptr<Tensor> Tensor::gelu() const {
-    std::vector<double> out(numel());
+    size_t n = numel();
+    std::vector<double> out(n);
     const double inv_sqrt2 = 1.0 / std::sqrt(2.0);
-    for (size_t i = 0; i < numel(); ++i) {
-        double x = (*this)[i];
-        double cdf = 0.5 * (1.0 + std::erf(x * inv_sqrt2));
-        out[i] = x * cdf;
+    if (is_contiguous()) {
+        const double* in_ptr = data();
+        double* out_ptr = out.data();
+        for (size_t i = 0; i < n; ++i) {
+            double x = in_ptr[i];
+            double cdf = 0.5 * (1.0 + std::erf(x * inv_sqrt2));
+            out_ptr[i] = x * cdf;
+        }
+    } else {
+        for (size_t i = 0; i < n; ++i) {
+            double x = (*this)[i];
+            double cdf = 0.5 * (1.0 + std::erf(x * inv_sqrt2));
+            out[i] = x * cdf;
+        }
     }
     auto result = std::make_shared<Tensor>(shape_, std::move(out), requires_grad_);
     if (requires_grad_) {
@@ -610,11 +750,22 @@ std::shared_ptr<Tensor> Tensor::gelu() const {
 }
 
 std::shared_ptr<Tensor> Tensor::silu() const {
-    std::vector<double> out(numel());
-    for (size_t i = 0; i < numel(); ++i) {
-        double x = (*this)[i];
-        double sig = 1.0 / (1.0 + std::exp(-x));
-        out[i] = x * sig;
+    size_t n = numel();
+    std::vector<double> out(n);
+    if (is_contiguous()) {
+        const double* in_ptr = data();
+        double* out_ptr = out.data();
+        for (size_t i = 0; i < n; ++i) {
+            double x = in_ptr[i];
+            double sig = 1.0 / (1.0 + std::exp(-x));
+            out_ptr[i] = x * sig;
+        }
+    } else {
+        for (size_t i = 0; i < n; ++i) {
+            double x = (*this)[i];
+            double sig = 1.0 / (1.0 + std::exp(-x));
+            out[i] = x * sig;
+        }
     }
     auto result = std::make_shared<Tensor>(shape_, std::move(out), requires_grad_);
     if (requires_grad_) {
@@ -626,9 +777,18 @@ std::shared_ptr<Tensor> Tensor::silu() const {
 }
 
 std::shared_ptr<Tensor> Tensor::tanh() const {
-    std::vector<double> out(numel());
-    for (size_t i = 0; i < numel(); ++i) {
-        out[i] = std::tanh((*this)[i]);
+    size_t n = numel();
+    std::vector<double> out(n);
+    if (is_contiguous()) {
+        const double* in_ptr = data();
+        double* out_ptr = out.data();
+        for (size_t i = 0; i < n; ++i) {
+            out_ptr[i] = std::tanh(in_ptr[i]);
+        }
+    } else {
+        for (size_t i = 0; i < n; ++i) {
+            out[i] = std::tanh((*this)[i]);
+        }
     }
     auto result = std::make_shared<Tensor>(shape_, std::move(out), requires_grad_);
     if (requires_grad_) {
@@ -640,9 +800,18 @@ std::shared_ptr<Tensor> Tensor::tanh() const {
 }
 
 std::shared_ptr<Tensor> Tensor::sigmoid() const {
-    std::vector<double> out(numel());
-    for (size_t i = 0; i < numel(); ++i) {
-        out[i] = 1.0 / (1.0 + std::exp(-(*this)[i]));
+    size_t n = numel();
+    std::vector<double> out(n);
+    if (is_contiguous()) {
+        const double* in_ptr = data();
+        double* out_ptr = out.data();
+        for (size_t i = 0; i < n; ++i) {
+            out_ptr[i] = 1.0 / (1.0 + std::exp(-in_ptr[i]));
+        }
+    } else {
+        for (size_t i = 0; i < n; ++i) {
+            out[i] = 1.0 / (1.0 + std::exp(-(*this)[i]));
+        }
     }
     auto result = std::make_shared<Tensor>(shape_, std::move(out), requires_grad_);
     if (requires_grad_) {
@@ -654,9 +823,18 @@ std::shared_ptr<Tensor> Tensor::sigmoid() const {
 }
 
 std::shared_ptr<Tensor> Tensor::clamp(double min_val, double max_val) const {
-    std::vector<double> out(numel());
-    for (size_t i = 0; i < numel(); ++i) {
-        out[i] = std::clamp((*this)[i], min_val, max_val);
+    size_t n = numel();
+    std::vector<double> out(n);
+    if (is_contiguous()) {
+        const double* in_ptr = data();
+        double* out_ptr = out.data();
+        for (size_t i = 0; i < n; ++i) {
+            out_ptr[i] = std::clamp(in_ptr[i], min_val, max_val);
+        }
+    } else {
+        for (size_t i = 0; i < n; ++i) {
+            out[i] = std::clamp((*this)[i], min_val, max_val);
+        }
     }
     auto result = std::make_shared<Tensor>(shape_, std::move(out), requires_grad_);
     if (requires_grad_) {
